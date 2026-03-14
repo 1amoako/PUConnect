@@ -74,7 +74,7 @@ export default function SuccessScreen() {
         </Animated.View>
         
         <View style={styles.iconWrapper}>
-          <Ionicons name="checkmark" size={100} color="#fff" />
+          <Ionicons name="checkmark" size={100} color="#000" />
         </View>
       </Animated.View>
 
@@ -121,11 +121,10 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 60,
-    backgroundColor: "#4CAF50",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#000",
+    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.15)",
     elevation: 8,
   },
   iconWrapper: {
