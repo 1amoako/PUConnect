@@ -176,7 +176,10 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
     }
 
     return (
-      <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
+      <TouchableOpacity 
+        style={[styles.floatingButton, isDesktop ? styles.floatingButtonDesktop : styles.floatingButtonMobile]} 
+        onPress={onPress}
+      >
         <Ionicons name={icon} size={24} color="#fff" />
         <Text style={styles.floatingButtonText}>{label}</Text>
       </TouchableOpacity>
@@ -185,7 +188,6 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
 
   return (
     <View style={styles.container}>
-      {renderBanner()}
       <ScrollView 
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
@@ -195,6 +197,7 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
         {activeSubTab === "products" && renderProductsTab()}
         {activeSubTab === "me" && renderMeTab()}
       </ScrollView>
+      {renderBanner()}
       {renderFAB()}
     </View>
   );
@@ -206,15 +209,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   bannerContainer: {
-    backgroundColor: "#fff",
+    position: "absolute",
+    top: 15,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 18,
     paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
     zIndex: 10,
-    // Add shadow to make it appear floating over scrolling content
-    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.05)",
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
     elevation: 5,
   },
   bannerText: {
@@ -252,6 +259,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingTop: 165, // Space for the pill-shaped floating banner + its top margin
     paddingBottom: 120, // Space for bottom nav/FABs
     maxWidth: 1000,
     width: "100%",
@@ -329,8 +337,6 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: "absolute",
-    bottom: Platform.OS === "web" ? 30 : 115,
-    right: Platform.OS === "web" ? 40 : 20,
     backgroundColor: "#000",
     flexDirection: "row",
     alignItems: "center",
@@ -340,6 +346,14 @@ const styles = StyleSheet.create({
     boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.2)",
     elevation: 10,
     zIndex: 100,
+  },
+  floatingButtonMobile: {
+    bottom: 115, // Sit just above the floating bottom nav
+    right: 20,
+  },
+  floatingButtonDesktop: {
+    bottom: 30,
+    right: 40,
   },
   floatingButtonText: {
     color: "#fff",
