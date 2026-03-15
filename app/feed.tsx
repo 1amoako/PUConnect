@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
+import PeopleAndProductsView from "../components/PeopleAndProductsView";
 
 interface CardData {
   id: string;
@@ -99,26 +100,32 @@ export default function FeedScreen() {
     </View>
   );
 
-  const renderTopBar = () => (
-    <View style={styles.topBar}>
-      {renderLogo()}
-      <View style={styles.topBarTitleContainer}>
-        <Text style={styles.topBarTitle}>{activeTab === "chat" ? "Chats" : "Your Feed"}</Text>
-      </View>
-      <View style={styles.utilitySection}>
-        <View style={styles.topIcons}>
-          {activeTab !== "chat" && (
+  const renderTopBar = () => {
+    let title = "Your Feed";
+    if (activeTab === "chat") title = "Chats";
+    if (activeTab === "discover") title = "People & Products";
+
+    return (
+      <View style={styles.topBar}>
+        {renderLogo()}
+        <View style={styles.topBarTitleContainer}>
+          <Text style={styles.topBarTitle}>{title}</Text>
+        </View>
+        <View style={styles.utilitySection}>
+          <View style={styles.topIcons}>
+            {activeTab !== "chat" && (
+              <TouchableOpacity style={styles.iconButton}>
+                <Ionicons name="search-outline" size={28} color="#000" />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="search-outline" size={28} color="#000" />
+              <Ionicons name="notifications-outline" size={28} color="#000" />
             </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={28} color="#000" />
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderNavItem = (name: string, icon: any, label: string) => {
     const isActive = activeTab === name;
@@ -149,7 +156,7 @@ export default function FeedScreen() {
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
     { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    { name: "discover", icon: "compass-outline", label: "Discover" },
+    { name: "discover", icon: "compass-outline", label: "People\n& Products" },
     { name: "profile", icon: "person-outline", label: "Profile" },
   ];
 
@@ -190,6 +197,10 @@ export default function FeedScreen() {
               isDesktop={isDesktop} 
               onActiveChatChange={setIsMobileChatActive} 
             />
+          )}
+
+          {activeTab === "discover" && (
+            <PeopleAndProductsView isDesktop={isDesktop} />
           )}
 
           {/* Mobile Bottom Nav */}
