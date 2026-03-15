@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   StyleSheet, 
   Text, 
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
 
 interface CardData {
@@ -87,7 +88,8 @@ function ContentCard({ data, isDesktop }: { data: CardData; isDesktop: boolean }
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
+  const isDesktop = width >= 768;
+  const [activeTab, setActiveTab] = useState("home");
 
   const renderLogo = () => (
     <View style={styles.logoBox}>
@@ -111,12 +113,31 @@ export default function FeedScreen() {
     </View>
   );
 
-  const renderNavItem = (name: string, icon: any, label: string) => (
-    <TouchableOpacity key={name} style={isDesktop ? styles.sideNavItem : styles.bottomNavItem}>
-      <Ionicons name={icon} size={24} color="#000" />
-      {isDesktop && <Text style={styles.sideNavLink}>{label}</Text>}
-    </TouchableOpacity>
-  );
+  const renderNavItem = (name: string, icon: any, label: string) => {
+    const isActive = activeTab === name;
+    return (
+      <TouchableOpacity 
+        key={name} 
+        style={[
+          isDesktop ? styles.sideNavItem : styles.bottomNavItem,
+          !isDesktop && isActive && styles.bottomNavItemActive
+        ]}
+        onPress={() => setActiveTab(name)}
+      >
+        <View style={[styles.navIconContainer, !isDesktop && isActive && styles.navIconContainerActive]}>
+          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={24} color={isActive ? "#000" : "#444"} />
+        </View>
+        {(isDesktop || isActive) && (
+          <Text style={[
+            isDesktop ? styles.sideNavLink : styles.bottomNavLabel,
+            isActive && !isDesktop && styles.bottomNavLabelActive
+          ]}>
+            {label}
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
@@ -162,9 +183,17 @@ export default function FeedScreen() {
 
           {/* Mobile Bottom Nav */}
           {!isDesktop && (
-            <View style={styles.bottomNav}>
-              {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
-            </View>
+            <>
+              <LinearGradient
+                colors={['transparent', 'rgba(255, 255, 255, 0.8)']}
+                style={styles.footerTranslucent}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.15 }}
+              />
+              <View style={styles.bottomNav}>
+                {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+              </View>
+            </>
           )}
         </View>
       </View>
@@ -254,7 +283,7 @@ const styles = StyleSheet.create({
   },
   feedContainer: {
     padding: 25,
-    paddingBottom: 100, // Space for bottom nav
+    paddingBottom: 120, // Space for floating bottom nav
   },
   feedHeader: {
     marginBottom: 30,
@@ -361,21 +390,54 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: "absolute",
+    bottom: 25,
+    left: 20,
+    right: 20,
+    height: 75,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "ios" ? 5 : 0,
+    boxShadow: "0px 12px 30px rgba(0, 0, 0, 0.2)",
+    elevation: 15,
+  },
+  footerTranslucent: {
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: 70,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#eee",
-    paddingBottom: Platform.OS === "ios" ? 15 : 0,
+    height: 100, // Exactly matches top of navbar (bottom 25 + height 75)
   },
   bottomNavItem: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 10,
+    minWidth: 65,
+    height: "100%",
+  },
+  bottomNavItemActive: {
+    // Add specific styles if needed for the container
+  },
+  navIconContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 4,
+  },
+  navIconContainerActive: {
+    backgroundColor: "#f0f0f0",
+  },
+  bottomNavLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#666",
+  },
+  bottomNavLabelActive: {
+    color: "#000",
+    fontWeight: "700",
   },
 });
