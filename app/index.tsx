@@ -81,6 +81,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
+    maxWidth: 400,
+    width: "100%",
+    alignSelf: "center",
   },
   glassCard: {
     paddingVertical: 40,

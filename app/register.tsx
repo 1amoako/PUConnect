@@ -113,6 +113,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
     paddingVertical: 40,
+    maxWidth: 400,
+    width: "100%",
+    alignSelf: "center",
   },
   card: {
     paddingVertical: 30,

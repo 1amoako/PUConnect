@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
+import ChatView from "../components/ChatView";
 
 interface CardData {
   id: string;
@@ -164,22 +165,28 @@ export default function FeedScreen() {
         <View style={styles.mainContent}>
           {renderTopBar()}
           
-          <ScrollView 
-            style={styles.feedScroll}
-            contentContainerStyle={styles.feedContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.feedHeader}>
-              <Text style={styles.feedTitle}>Your Feed</Text>
-              <Text style={styles.feedSubtitle}>Discover skills and products around you</Text>
-            </View>
+          {activeTab === "home" && (
+            <ScrollView 
+              style={styles.feedScroll}
+              contentContainerStyle={styles.feedContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.feedHeader}>
+                <Text style={styles.feedTitle}>Your Feed</Text>
+                <Text style={styles.feedSubtitle}>Discover skills and products around you</Text>
+              </View>
 
-            <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
-              {SAMPLE_DATA.map(item => (
-                <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
-              ))}
-            </View>
-          </ScrollView>
+              <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
+                {SAMPLE_DATA.map(item => (
+                  <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
+                ))}
+              </View>
+            </ScrollView>
+          )}
+
+          {activeTab === "chat" && (
+            <ChatView isDesktop={isDesktop} />
+          )}
 
           {/* Mobile Bottom Nav */}
           {!isDesktop && (
@@ -284,6 +291,9 @@ const styles = StyleSheet.create({
   feedContainer: {
     padding: 25,
     paddingBottom: 120, // Space for floating bottom nav
+    maxWidth: 1000,
+    width: "100%",
+    alignSelf: "center",
   },
   feedHeader: {
     marginBottom: 30,
