@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface PeopleAndProductsViewProps {
@@ -195,7 +195,7 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
         {activeSubTab === "products" && renderProductsTab()}
         {activeSubTab === "me" && renderMeTab()}
       </ScrollView>
-      {!isDesktop && renderFAB()}
+      {renderFAB()}
     </View>
   );
 }
@@ -329,8 +329,8 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: "absolute",
-    bottom: 115, // Sit just above the floating bottom nav (bottom 25 + height 75)
-    right: 20,
+    bottom: Platform.OS === "web" ? 30 : 115,
+    right: Platform.OS === "web" ? 40 : 20,
     backgroundColor: "#000",
     flexDirection: "row",
     alignItems: "center",

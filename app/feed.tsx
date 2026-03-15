@@ -168,7 +168,7 @@ export default function FeedScreen() {
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
     { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    { name: "discover", icon: "compass-outline", label: "People\n& Products" },
+    { name: "discover", icon: "compass-outline", label: "People & Products" },
     { name: "profile", icon: "person-outline", label: "Profile" },
   ];
 
@@ -315,17 +315,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   stackedTitleText: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "800",
     color: "#000",
-    lineHeight: 16,
-    textTransform: "uppercase",
+    lineHeight: 20,
   },
   stackedTitleAmp: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
     color: "#666",
-    lineHeight: 12,
+    lineHeight: 14,
     marginVertical: 1,
   },
   logoBox: {
