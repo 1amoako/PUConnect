@@ -15,13 +15,6 @@ interface UserProfile {
   skills: string[];
 }
 
-interface UserProfile {
-  id: string;
-  name: string;
-  status: string;
-  skills: string[];
-}
-
 interface ProductItem {
   id: string;
   title: string;
@@ -98,12 +91,6 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
   const renderPeopleTab = () => (
     <View style={styles.tabContent}>
       {MOCK_PROFILES.map(renderProfileCard)}
-      
-      {/* Absolute floating button specifically for People tab */}
-      <TouchableOpacity style={styles.floatingButton}>
-        <Ionicons name="person-add-outline" size={24} color="#fff" />
-        <Text style={styles.floatingButtonText}>Create Profile</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -134,15 +121,6 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
   const renderProductsTab = () => (
     <View style={styles.tabContent}>
       {MOCK_PRODUCTS.map(p => renderProductCard(p, false))}
-      
-      {/* Absolute floating button specifically for Products tab */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={() => setActiveSubTab("me")}
-      >
-        <Ionicons name="add-circle-outline" size={24} color="#fff" />
-        <Text style={styles.floatingButtonText}>List Product</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -177,14 +155,31 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
                 {MY_PRODUCTS.map(p => renderProductCard(p, true))}
               </View>
             )}
-            
-            <TouchableOpacity style={styles.floatingButton}>
-              <Ionicons name="add" size={24} color="#fff" />
-              <Text style={styles.floatingButtonText}>Manage</Text>
-            </TouchableOpacity>
           </>
         )}
       </View>
+    );
+  };
+
+  const renderFAB = () => {
+    let icon: any = "person-add-outline";
+    let label = "Create Profile";
+    let onPress = () => {};
+
+    if (activeSubTab === "products") {
+      icon = "add-circle-outline";
+      label = "List Product";
+      onPress = () => setActiveSubTab("me");
+    } else if (activeSubTab === "me") {
+      icon = "add";
+      label = "Manage";
+    }
+
+    return (
+      <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
+        <Ionicons name={icon} size={24} color="#fff" />
+        <Text style={styles.floatingButtonText}>{label}</Text>
+      </TouchableOpacity>
     );
   };
 
@@ -200,6 +195,7 @@ export default function PeopleAndProductsView({ isDesktop }: PeopleAndProductsVi
         {activeSubTab === "products" && renderProductsTab()}
         {activeSubTab === "me" && renderMeTab()}
       </ScrollView>
+      {!isDesktop && renderFAB()}
     </View>
   );
 }
@@ -333,8 +329,8 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: "absolute",
-    bottom: 20,
-    right: 0,
+    bottom: 115, // Sit just above the floating bottom nav (bottom 25 + height 75)
+    right: 20,
     backgroundColor: "#000",
     flexDirection: "row",
     alignItems: "center",
@@ -343,6 +339,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.2)",
     elevation: 10,
+    zIndex: 100,
   },
   floatingButtonText: {
     color: "#fff",

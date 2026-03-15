@@ -101,15 +101,27 @@ export default function FeedScreen() {
   );
 
   const renderTopBar = () => {
-    let title = "Your Feed";
+    let title: React.ReactNode = "Your Feed";
     if (activeTab === "chat") title = "Chats";
-    if (activeTab === "discover") title = "People & Products";
+    if (activeTab === "discover") {
+      title = (
+        <View style={styles.stackedTitleContainer}>
+          <Text style={styles.stackedTitleText}>People</Text>
+          <Text style={styles.stackedTitleAmp}>&</Text>
+          <Text style={styles.stackedTitleText}>Products</Text>
+        </View>
+      );
+    }
 
     return (
       <View style={styles.topBar}>
         {renderLogo()}
         <View style={styles.topBarTitleContainer}>
-          <Text style={styles.topBarTitle}>{title}</Text>
+          {typeof title === "string" ? (
+            <Text style={styles.topBarTitle}>{title}</Text>
+          ) : (
+            title
+          )}
         </View>
         <View style={styles.utilitySection}>
           <View style={styles.topIcons}>
@@ -297,6 +309,24 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#000",
     letterSpacing: -0.5,
+  },
+  stackedTitleContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stackedTitleText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#000",
+    lineHeight: 16,
+    textTransform: "uppercase",
+  },
+  stackedTitleAmp: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666",
+    lineHeight: 12,
+    marginVertical: 1,
   },
   logoBox: {
     width: 120,
