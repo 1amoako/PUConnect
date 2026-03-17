@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
 import PeopleView from "@/components/PeopleView";
+import ProfileView from "@/components/ProfileView";
 
 interface CardData {
   id: string;
@@ -110,6 +111,7 @@ export default function FeedScreen() {
         </View>
       );
     }
+    if (activeTab === "profile") title = "Profile";
 
     return (
       <View style={styles.topBar}>
@@ -125,7 +127,11 @@ export default function FeedScreen() {
           <View style={styles.topIcons}>
             {activeTab !== "chat" && (
               <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="search-outline" size={28} color="#000" />
+                <Ionicons 
+                  name={activeTab === "profile" ? "settings-outline" : "search-outline"} 
+                  size={28} 
+                  color="#000" 
+                />
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.iconButton}>
@@ -211,6 +217,10 @@ export default function FeedScreen() {
 
           {activeTab === "discover" && (
             <PeopleView isDesktop={isDesktop} />
+          )}
+
+          {activeTab === "profile" && (
+            <ProfileView isDesktop={isDesktop} />
           )}
 
           {/* Mobile Bottom Nav */}
