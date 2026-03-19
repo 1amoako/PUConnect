@@ -267,29 +267,38 @@ export default function FeedScreen() {
   const renderNavItem = (name: string, icon: any, label: string) => {
     const isActive = activeTab === name;
     const isSpecial = name === "admin";
+    const showSpecialStyle = isSpecial && !isDesktop;
+
     return (
       <TouchableOpacity 
         key={name} 
         style={[
           isDesktop ? styles.sideNavItem : styles.bottomNavItem,
+          isDesktop && isActive && [styles.sideNavItemActive, { backgroundColor: colors.iconBackground }],
           !isDesktop && isActive && styles.bottomNavItemActive,
-          !isDesktop && isSpecial && styles.specialBottomNavItem
+          showSpecialStyle && styles.specialBottomNavItem
         ]}
         onPress={() => setActiveTab(name)}
       >
+        {showSpecialStyle && (
+          <View style={[styles.navHole, { backgroundColor: colors.background }]} />
+        )}
         <View style={[
           styles.navIconContainer, 
           !isDesktop && isActive && styles.navIconContainerActive, 
-          !isDesktop && isSpecial && [styles.specialIconContainer, { backgroundColor: colors.primary, borderColor: colors.background }],
-          { backgroundColor: isActive && !isSpecial ? colors.primary : (isSpecial ? colors.primary : 'transparent') }
+          showSpecialStyle && [styles.specialIconContainer, { backgroundColor: colors.primary, borderColor: colors.background }],
         ]}>
-          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={isSpecial && !isDesktop ? 28 : 24} color={isActive || isSpecial ? colors.background : colors.mutedText} />
+          <Ionicons 
+            name={isActive ? icon.replace("-outline", "") : icon} 
+            size={showSpecialStyle ? 28 : 24} 
+            color={showSpecialStyle ? colors.background : (isActive ? colors.primary : colors.mutedText)} 
+          />
         </View>
         {(isDesktop || (isActive && !isSpecial)) && (
           <Text style={[
             isDesktop ? styles.sideNavLink : styles.bottomNavLabel,
             isActive && !isDesktop && styles.bottomNavLabelActive,
-            { color: isActive ? colors.text : colors.mutedText }
+            { color: isActive ? (isDesktop ? colors.primary : colors.text) : colors.mutedText }
           ]}>
             {label}
           </Text>
@@ -301,7 +310,7 @@ export default function FeedScreen() {
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
     { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    ...(isAdmin ? [{ name: "admin", icon: "shield-outline", label: "Admin" }] : []),
+    ...(isAdmin ? [{ name: "admin", icon: "shield-checkmark-outline", label: "Admin" }] : []),
     { name: "discover", icon: "compass-outline", label: "People" },
     { name: "profile", icon: "person-outline", label: "Profile" },
   ];
@@ -453,13 +462,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
+    paddingHorizontal: 15,
     marginBottom: 8,
+    borderRadius: 15,
+  },
+  sideNavItemActive: {
+    // Background color set dynamically
   },
   sideNavLink: {
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 15,
-    color: "#000",
   },
   sidebarDivider: {
     height: 1,
@@ -737,6 +750,13 @@ const styles = StyleSheet.create({
     boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.3)",
     elevation: 20,
     borderWidth: 4,
-    borderColor: "#fff", // Adjust based on theme in real implementation if needed
+  },
+  navHole: {
+    position: "absolute",
+    top: -32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    zIndex: -1,
   },
 });
