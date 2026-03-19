@@ -1,10 +1,12 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { StyleSheet, View, Animated, Easing } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Animated, Easing, StyleSheet, View } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 export default function SuccessScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -57,7 +59,7 @@ export default function SuccessScreen() {
   });
 
   return (
-    <Animated.View style={[styles.container, { opacity: pageFadeAnim }]}>
+    <Animated.View style={[styles.container, { opacity: pageFadeAnim, backgroundColor: colors.background }]}>
       <Animated.View 
         style={[
           styles.cloverContainer, 
@@ -69,12 +71,12 @@ export default function SuccessScreen() {
       >
         {/* Layering two boxes with high border radius to create a 'Clover' scalloped shape */}
         <Animated.View style={[styles.backgroundWrapper, { transform: [{ rotate: spin }] }]}>
-          <View style={styles.scallopPart} />
-          <View style={[styles.scallopPart, { transform: [{ rotate: '45deg' }] }]} />
+          <View style={[styles.scallopPart, { backgroundColor: colors.primary }]} />
+          <View style={[styles.scallopPart, { transform: [{ rotate: '45deg' }], backgroundColor: colors.primary }]} />
         </Animated.View>
         
         <View style={styles.iconWrapper}>
-          <Ionicons name="checkmark" size={100} color="#000" />
+          <Ionicons name="checkmark" size={100} color={colors.background} />
         </View>
       </Animated.View>
 
@@ -82,6 +84,7 @@ export default function SuccessScreen() {
         style={[
           styles.welcomeText, 
           { 
+            color: colors.text,
             opacity: opacityAnim,
             transform: [{ translateY: scaleAnim.interpolate({
               inputRange: [0, 1],

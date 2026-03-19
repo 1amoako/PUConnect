@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 interface PeopleViewProps {
   isDesktop: boolean;
@@ -24,23 +25,24 @@ const MOCK_PROFILES: UserProfile[] = [
 const MY_PROFILE: UserProfile | null = { id: "me1", name: "Jacob Zero", status: "Looking for new projects.", skills: ["React Native", "TypeScript", "UI Design"] };
 
 export default function PeopleView({ isDesktop }: PeopleViewProps) {
+  const { colors, isDark } = useTheme();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("people");
 
   const renderBanner = () => (
-    <View style={styles.bannerContainer}>
-      <Text style={styles.bannerText}>
+    <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
+      <Text style={[styles.bannerText, { color: colors.text }]}>
         Find skilled people to assist you right now!
       </Text>
-      <View style={styles.tabSwitcher}>
+      <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
         {(["people", "me"] as SubTab[]).map((tab) => {
           const isActive = activeSubTab === tab;
           return (
             <TouchableOpacity
               key={tab}
-              style={[styles.tabButton, isActive && styles.tabButtonActive]}
+              style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
               onPress={() => setActiveSubTab(tab)}
             >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+              <Text style={[styles.tabText, { color: colors.mutedText }, isActive && [styles.tabTextActive, { color: colors.background }]]}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -51,20 +53,20 @@ export default function PeopleView({ isDesktop }: PeopleViewProps) {
   );
 
   const renderProfileCard = (profile: UserProfile) => (
-    <View key={profile.id} style={styles.profileCard}>
+    <View key={profile.id} style={[styles.profileCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.profileHeader}>
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{profile.name.charAt(0)}</Text>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.iconBackground }]}>
+          <Text style={[styles.avatarText, { color: colors.text }]}>{profile.name.charAt(0)}</Text>
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{profile.name}</Text>
-          <Text style={styles.profileStatus}>{profile.status}</Text>
+          <Text style={[styles.profileName, { color: colors.text }]}>{profile.name}</Text>
+          <Text style={[styles.profileStatus, { color: colors.mutedText }]}>{profile.status}</Text>
         </View>
       </View>
       <View style={styles.skillsContainer}>
         {profile.skills.map((skill, index) => (
-          <View key={index} style={styles.skillBadge}>
-            <Text style={styles.skillText}>{skill}</Text>
+          <View key={index} style={[styles.skillBadge, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+            <Text style={[styles.skillText, { color: colors.secondaryText }]}>{skill}</Text>
           </View>
         ))}
       </View>
@@ -85,18 +87,18 @@ export default function PeopleView({ isDesktop }: PeopleViewProps) {
       <View style={styles.tabContent}>
         {isEmpty ? (
           <View style={styles.emptyStateContainer}>
-            <Ionicons name="cube-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyStateTitle}>Nothing here yet</Text>
-            <Text style={styles.emptyStateSub}>Create a profile to get started.</Text>
-            <TouchableOpacity style={styles.emptyStateButton}>
-              <Text style={styles.emptyStateButtonText}>Get Started</Text>
+            <Ionicons name="cube-outline" size={48} color={colors.mutedText} />
+            <Text style={[styles.emptyStateTitle, { color: colors.text }]}>Nothing here yet</Text>
+            <Text style={[styles.emptyStateSub, { color: colors.mutedText }]}>Create a profile to get started.</Text>
+            <TouchableOpacity style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.emptyStateButtonText, { color: colors.background }]}>Get Started</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             {hasProfile && MY_PROFILE && (
               <View style={styles.meSection}>
-                <Text style={styles.sectionTitle}>My Profile</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>My Profile</Text>
                 {renderProfileCard(MY_PROFILE)}
               </View>
             )}
@@ -118,17 +120,17 @@ export default function PeopleView({ isDesktop }: PeopleViewProps) {
 
     return (
       <TouchableOpacity 
-        style={[styles.floatingButton, isDesktop ? styles.floatingButtonDesktop : styles.floatingButtonMobile]} 
+        style={[styles.floatingButton, isDesktop ? styles.floatingButtonDesktop : styles.floatingButtonMobile, { backgroundColor: colors.primary }]} 
         onPress={onPress}
       >
-        <Ionicons name={icon} size={24} color="#fff" />
-        <Text style={styles.floatingButtonText}>{label}</Text>
+        <Ionicons name={icon} size={24} color={colors.background} />
+        <Text style={[styles.floatingButtonText, { color: colors.background }]}>{label}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
@@ -151,8 +153,9 @@ const styles = StyleSheet.create({
   bannerContainer: {
     position: "absolute",
     top: 15,
-    left: 20,
-    right: 20,
+    width: "92%",
+    maxWidth: 960,
+    alignSelf: "center",
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     paddingHorizontal: 20,
     paddingTop: 18,

@@ -1,12 +1,14 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 interface ProfileViewProps {
   isDesktop: boolean;
 }
 
 export default function ProfileView({ isDesktop }: ProfileViewProps) {
+  const { colors } = useTheme();
   // Mock user data
   const user = {
     name: "Jacob Zero",
@@ -24,53 +26,53 @@ export default function ProfileView({ isDesktop }: ProfileViewProps) {
 
   return (
     <ScrollView 
-      style={styles.container} 
+      style={[styles.container, { backgroundColor: colors.background }]} 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
       {/* Profile Card */}
-      <View style={[styles.profileCard, isDesktop && styles.profileCardDesktop]}>
+      <View style={[styles.profileCard, isDesktop && styles.profileCardDesktop, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial}</Text>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.avatarText, { color: colors.background }]}>{initial}</Text>
           </View>
         </View>
         
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userHandle}>{user.handle}</Text>
-          <Text style={styles.userJoined}>Joined {user.joined}</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>{user.name}</Text>
+          <Text style={[styles.userHandle, { color: colors.mutedText }]}>{user.handle}</Text>
+          <Text style={[styles.userJoined, { color: colors.mutedText }]}>Joined {user.joined}</Text>
         </View>
 
-        <TouchableOpacity style={styles.updateButton}>
-          <Text style={styles.updateButtonText}>Update Profile</Text>
+        <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.updateButtonText, { color: colors.background }]}>Update Profile</Text>
         </TouchableOpacity>
       </View>
 
       {/* Skills Card */}
-      <View style={styles.skillsCard}>
-        <Text style={styles.sectionTitle}>Skills</Text>
+      <View style={[styles.skillsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Skills</Text>
         <View style={styles.skillsContainer}>
           {user.skills.map((skill, index) => (
-            <View key={index} style={styles.skillTag}>
-              <Text style={styles.skillText}>{skill}</Text>
+            <View key={index} style={[styles.skillTag, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+              <Text style={[styles.skillText, { color: colors.secondaryText }]}>{skill}</Text>
             </View>
           ))}
         </View>
       </View>
 
       {/* Activity Card */}
-      <View style={styles.activityCard}>
-        <Text style={styles.sectionTitle}>Activity</Text>
+      <View style={[styles.activityCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Activity</Text>
         <View style={styles.activityList}>
           {user.activities.map((activity) => (
             <View key={activity.id} style={styles.activityItem}>
-              <View style={styles.activityIconContainer}>
-                <Ionicons name={activity.icon as any} size={18} color="#000" />
+              <View style={[styles.activityIconContainer, { backgroundColor: colors.iconBackground }]}>
+                <Ionicons name={activity.icon as any} size={18} color={colors.text} />
               </View>
               <View style={styles.activityTextContainer}>
-                <Text style={styles.activityText}>{activity.text}</Text>
-                <Text style={styles.activityTime}>{activity.time}</Text>
+                <Text style={[styles.activityText, { color: colors.text }]}>{activity.text}</Text>
+                <Text style={[styles.activityTime, { color: colors.mutedText }]}>{activity.time}</Text>
               </View>
             </View>
           ))}

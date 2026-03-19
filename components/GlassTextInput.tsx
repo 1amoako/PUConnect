@@ -1,11 +1,17 @@
 import React from 'react';
 import { StyleSheet, TextInput, TextInputProps } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export function GlassTextInput(props: TextInputProps) {
+    const { colors } = useTheme();
     return (
         <TextInput
-            style={styles.input}
-            placeholderTextColor="#888"
+            style={[styles.input, { 
+                color: colors.text, 
+                backgroundColor: colors.cardBackground, 
+                borderColor: colors.primary 
+            }]}
+            placeholderTextColor={colors.mutedText}
             {...props}
         />
     );

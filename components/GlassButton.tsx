@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 interface GlassButtonProps extends TouchableOpacityProps {
     title: string;
@@ -7,6 +8,7 @@ interface GlassButtonProps extends TouchableOpacityProps {
 }
 
 export function GlassButton({ title, variant = 'primary', style, ...rest }: GlassButtonProps) {
+    const { colors } = useTheme();
     const isPrimary = variant === 'primary';
 
     return (
@@ -14,12 +16,18 @@ export function GlassButton({ title, variant = 'primary', style, ...rest }: Glas
             activeOpacity={0.7}
             style={[
                 styles.container,
-                isPrimary ? styles.primaryContainer : styles.secondaryContainer,
+                { 
+                    backgroundColor: isPrimary ? colors.primary : colors.background,
+                    borderColor: colors.primary
+                },
                 style
             ]}
             {...rest}
         >
-            <Text style={isPrimary ? styles.textPrimary : styles.textSecondary}>{title}</Text>
+            <Text style={[
+                isPrimary ? styles.textPrimary : styles.textSecondary,
+                { color: isPrimary ? colors.background : colors.text }
+            ]}>{title}</Text>
         </TouchableOpacity>
     );
 }

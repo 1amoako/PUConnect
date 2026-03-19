@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 interface ChatItem {
   id: string;
@@ -55,6 +56,7 @@ interface ChatViewProps {
 }
 
 export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProps) {
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState<string | null>(null);
 
@@ -70,25 +72,28 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
     return (
       <TouchableOpacity 
         key={chat.id} 
-        style={[styles.chatItem, isActive && styles.chatItemActive]}
+        style={[
+          styles.chatItem, 
+          isActive && [styles.chatItemActive, { backgroundColor: colors.primary }]
+        ]}
         onPress={() => handleChatSelect(chat.id)}
       >
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{chat.name.charAt(0)}</Text>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.iconBackground }]}>
+          <Text style={[styles.avatarText, { color: colors.text }]}>{chat.name.charAt(0)}</Text>
         </View>
         <View style={styles.chatDetails}>
-          <Text style={[styles.chatName, isActive && styles.chatNameActive]} numberOfLines={1}>
+          <Text style={[styles.chatName, isActive && [styles.chatNameActive, { color: colors.background }], { color: colors.text }]} numberOfLines={1}>
             {chat.name}
           </Text>
-          <Text style={[styles.chatMessage, isActive && styles.chatMessageActive]} numberOfLines={1}>
+          <Text style={[styles.chatMessage, isActive && [styles.chatMessageActive, { color: colors.background }], { color: colors.mutedText }]} numberOfLines={1}>
             {chat.lastMessage}
           </Text>
         </View>
         <View style={styles.chatMeta}>
-          <Text style={styles.chatTime}>{chat.time}</Text>
+          <Text style={[styles.chatTime, { color: isActive ? colors.background : colors.mutedText }]}>{chat.time}</Text>
           {chat.unreadCount ? (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{chat.unreadCount > 9 ? "9+" : chat.unreadCount}</Text>
+            <View style={[styles.unreadBadge, { backgroundColor: isActive ? colors.background : colors.primary }]}>
+              <Text style={[styles.unreadText, { color: isActive ? colors.primary : colors.background }]}>{chat.unreadCount > 9 ? "9+" : chat.unreadCount}</Text>
             </View>
           ) : null}
         </View>
@@ -97,27 +102,32 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
   };
 
   const chatListContent = (
-    <View style={styles.chatListContainer}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+    <View style={[styles.chatListContainer, { backgroundColor: colors.background, borderRightColor: colors.border }]}>
+      <View style={styles.chatListHeader}>
+        <View style={[styles.searchBox, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+          <Ionicons name="search-outline" size={20} color={colors.mutedText} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search messages"
+            placeholderTextColor={colors.mutedText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.chatsList}
+        showsVerticalScrollIndicator={false}
+      >
         {SAMPLE_CHATS.map(renderChatItem)}
       </ScrollView>
     </View>
   );
 
   const emptyStateContent = (
-    <View style={styles.emptyStateContainer}>
-      <View style={styles.emptyStatePill}>
-        <Text style={styles.emptyStateText}>Select a chat to start messaging</Text>
+    <View style={[styles.emptyStateContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.emptyStatePill, { backgroundColor: colors.iconBackground }]}>
+        <Text style={[styles.emptyStateText, { color: colors.mutedText }]}>Select a chat to start messaging</Text>
       </View>
     </View>
   );
@@ -127,24 +137,24 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
     if (!chat) return emptyStateContent;
 
     return (
-      <View style={styles.activeChatContainer}>
+      <View style={[styles.activeChatContainer, { backgroundColor: colors.background }]}>
         {/* Chat Header */}
-        <View style={styles.chatHeader}>
+        <View style={[styles.chatHeader, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
           {!isDesktop && (
             <TouchableOpacity onPress={() => handleChatSelect(null)} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
           )}
           <View style={styles.chatHeaderInfo}>
-            <Text style={styles.chatHeaderName}>{chat.name}</Text>
-            <Text style={styles.chatHeaderStatus}>last seen recently</Text>
+            <Text style={[styles.chatHeaderName, { color: colors.text }]}>{chat.name}</Text>
+            <Text style={[styles.chatHeaderStatus, { color: colors.mutedText }]}>last seen recently</Text>
           </View>
           <View style={styles.chatHeaderActions}>
             <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="search-outline" size={22} color="#000" />
+              <Ionicons name="search-outline" size={22} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="ellipsis-vertical" size={22} color="#000" />
+              <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -155,8 +165,8 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
             if (msg.isSystem) {
               return (
                 <View key={msg.id} style={styles.systemMessageContainer}>
-                  <View style={styles.systemMessagePill}>
-                    <Text style={styles.systemMessageText}>{msg.text}</Text>
+                  <View style={[styles.systemMessagePill, { backgroundColor: colors.iconBackground }]}>
+                    <Text style={[styles.systemMessageText, { color: colors.mutedText }]}>{msg.text}</Text>
                   </View>
                 </View>
               );
@@ -172,17 +182,19 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
               >
                 <View style={[
                   styles.messageBubble,
-                  msg.isSentByMe ? styles.messageBubbleSent : styles.messageBubbleReceived
+                  msg.isSentByMe 
+                    ? [styles.messageBubbleSent, { backgroundColor: colors.primary }] 
+                    : [styles.messageBubbleReceived, { backgroundColor: colors.iconBackground, borderColor: colors.border }]
                 ]}>
                   <Text style={[
                     styles.messageText,
-                    msg.isSentByMe ? styles.messageTextSent : styles.messageTextReceived
+                    msg.isSentByMe ? { color: colors.background } : { color: colors.text }
                   ]}>
                     {msg.text}
                   </Text>
                   <Text style={[
                     styles.messageTime,
-                    msg.isSentByMe ? styles.messageTimeSent : styles.messageTimeReceived
+                    msg.isSentByMe ? { color: colors.background, opacity: 0.7 } : { color: colors.mutedText }
                   ]}>
                     {msg.time}
                   </Text>
@@ -195,19 +207,19 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
         {/* Input Bar */}
         <>
           <LinearGradient
-            colors={['transparent', 'rgba(255, 255, 255, 0.9)']}
+            colors={isDark ? ['transparent', colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)']}
             style={styles.inputTranslucentBackdrop}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.2 }}
           />
-          <View style={styles.inputBarContainer}>
+          <View style={[styles.inputBarContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <TouchableOpacity style={styles.inputIcon}>
-               <Ionicons name="attach-outline" size={26} color="#666" />
+               <Ionicons name="attach-outline" size={26} color={colors.mutedText} />
             </TouchableOpacity>
             <TextInput
-              style={styles.chatInput}
+              style={[styles.chatInput, { color: colors.text }]}
               placeholder="Message"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.mutedText}
             />
           </View>
         </>
@@ -217,18 +229,18 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
 
   if (!isDesktop) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {activeChat ? renderActiveChat() : chatListContent}
       </View>
     );
   }
 
   return (
-    <View style={styles.containerDesktop}>
-      <View style={styles.sidebar}>
+    <View style={[styles.containerDesktop, { backgroundColor: colors.background }]}>
+      <View style={[styles.sidebar, { borderRightColor: colors.border, backgroundColor: colors.background }]}>
         {chatListContent}
       </View>
-      <View style={styles.mainArea}>
+      <View style={[styles.mainArea, { backgroundColor: isDark ? colors.background : "#fcfcfc" }]}>
         {activeChat ? renderActiveChat() : emptyStateContent}
       </View>
     </View>

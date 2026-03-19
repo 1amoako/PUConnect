@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import { GlassContainer } from "./GlassContainer";
 
@@ -12,7 +13,7 @@ interface SettingsViewProps {
 
 export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
   const router = useRouter();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, colors, isDark, toggleTheme } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -24,93 +25,93 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
 
   const renderSettingRow = (icon: string, label: string, value?: React.ReactNode, onPress?: () => void) => (
     <TouchableOpacity 
-      style={styles.settingRow} 
+      style={[styles.settingRow, { borderBottomColor: colors.divider }]} 
       onPress={onPress}
       disabled={!onPress}
     >
       <View style={styles.settingLeft}>
-        <View style={styles.iconContainer}>
-          <Ionicons name={icon as any} size={20} color="#000" />
+        <View style={[styles.iconContainer, { backgroundColor: colors.iconBackground }]}>
+          <Ionicons name={icon as any} size={20} color={colors.text} />
         </View>
-        <Text style={styles.settingLabel}>{label}</Text>
+        <Text style={[styles.settingLabel, { color: colors.text }]}>{label}</Text>
       </View>
       <View style={styles.settingRight}>
         {value}
-        {onPress && <Ionicons name="chevron-forward" size={18} color="#ccc" style={{ marginLeft: 10 }} />}
+        {onPress && <Ionicons name="chevron-forward" size={18} color={colors.mutedText} style={{ marginLeft: 10 }} />}
       </View>
     </TouchableOpacity>
   );
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
 
       {/* Appearance Group */}
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>Appearance</Text>
-        <View style={styles.card}>
+        <Text style={[styles.groupTitle, { color: colors.mutedText }]}>Appearance</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {renderSettingRow(
             "moon-outline", 
             "Dark Mode", 
             <Switch 
-              value={isDarkMode} 
-              onValueChange={setIsDarkMode}
-              trackColor={{ false: "#eee", true: "#000" }}
+              value={isDark} 
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#eee", true: colors.primary }}
               thumbColor="#fff"
             />
           )}
-          <View style={styles.divider} />
-          {renderSettingRow("color-palette-outline", "Theme Color", <Text style={styles.valueText}>Monochrome</Text>, () => {})}
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+          {renderSettingRow("color-palette-outline", "Theme Color", <Text style={[styles.valueText, { color: colors.mutedText }]}>Monochrome</Text>, () => {})}
         </View>
       </View>
 
       {/* Account Group */}
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>Account</Text>
-        <View style={styles.card}>
+        <Text style={[styles.groupTitle, { color: colors.mutedText }]}>Account</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {renderSettingRow("person-outline", "Edit Profile", null, () => {})}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           {renderSettingRow(
             "notifications-outline", 
             "Notifications", 
             <Switch 
               value={notificationsEnabled} 
               onValueChange={setNotificationsEnabled}
-              trackColor={{ false: "#eee", true: "#000" }}
+              trackColor={{ false: "#eee", true: colors.primary }}
               thumbColor="#fff"
             />
           )}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           {renderSettingRow("shield-checkmark-outline", "Privacy", null, () => {})}
         </View>
       </View>
 
       {/* About Group */}
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>System</Text>
-        <View style={styles.card}>
+        <Text style={[styles.groupTitle, { color: colors.mutedText }]}>System</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           {renderSettingRow("trash-outline", "Clear Cache", null, () => {})}
-          <View style={styles.divider} />
-          {renderSettingRow("information-circle-outline", "About", <Text style={styles.valueText}>v1.0.4</Text>, () => {})}
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+          {renderSettingRow("information-circle-outline", "About", <Text style={[styles.valueText, { color: colors.mutedText }]}>v1.0.4</Text>, () => {})}
         </View>
       </View>
 
       {/* Session Group */}
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>Session</Text>
-        <View style={styles.card}>
+        <Text style={[styles.groupTitle, { color: colors.mutedText }]}>Session</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <TouchableOpacity 
             style={styles.settingRow}
             onPress={() => setShowLogoutConfirm(true)}
           >
             <View style={styles.settingLeft}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+              <View style={[styles.iconContainer, { backgroundColor: colors.iconBackground }]}>
+                <Ionicons name="log-out-outline" size={20} color={colors.danger} />
               </View>
-              <Text style={[styles.settingLabel, { color: "#FF3B30" }]}>Log Out</Text>
+              <Text style={[styles.settingLabel, { color: colors.danger }]}>Log Out</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -124,28 +125,28 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
         onRequestClose={() => setShowLogoutConfirm(false)}
       >
         <TouchableOpacity 
-          style={styles.modalOverlay} 
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]} 
           activeOpacity={1} 
           onPress={() => setShowLogoutConfirm(false)}
         >
-          <GlassContainer style={styles.modalContent}>
-            <View style={styles.modalIcon}>
-              <Ionicons name="log-out" size={40} color="#FF3B30" />
+          <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
+            <View style={[styles.modalIcon, { backgroundColor: colors.modalIconBackground }]}>
+              <Ionicons name="log-out" size={40} color={colors.danger} />
             </View>
-            <Text style={styles.modalTitle}>Logout Confirmation</Text>
-            <Text style={styles.modalDescription}>Are you sure you want to log out of PUConnect?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Logout Confirmation</Text>
+            <Text style={[styles.modalDescription, { color: colors.mutedText }]}>Are you sure you want to log out of PUConnect?</Text>
             
             <View style={styles.modalButtons}>
               <GlassButton 
                 title="Cancel" 
                 variant="secondary" 
                 onPress={() => setShowLogoutConfirm(false)}
-                style={styles.modalButton}
+                style={[styles.modalButton, { borderColor: colors.primary }]}
               />
               <GlassButton 
                 title="Log Out" 
                 onPress={handleLogout}
-                style={[styles.modalButton, styles.logoutButton]}
+                style={[styles.modalButton, styles.logoutButton, { backgroundColor: colors.danger, borderColor: colors.danger }]}
               />
             </View>
           </GlassContainer>

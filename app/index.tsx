@@ -4,9 +4,11 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-na
 import { GlassButton } from "../components/GlassButton";
 import { GlassContainer } from "../components/GlassContainer";
 import { GlassTextInput } from "../components/GlassTextInput";
+import { useTheme } from "../context/ThemeContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -21,14 +23,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.background}>
+    <View style={[styles.background, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <GlassContainer style={styles.glassCard}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+        <GlassContainer style={[styles.glassCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
+          <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
+          <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Sign in to continue</Text>
 
           <GlassTextInput
             placeholder="Username"
@@ -45,7 +47,7 @@ export default function LoginScreen() {
 
           <View style={styles.forgotPasswordContainer}>
             <Text 
-              style={styles.forgotPasswordText}
+              style={[styles.forgotPasswordText, { color: colors.text }]}
               onPress={() => router.push("/forgot-password")}
             >
               Forgot Password?
@@ -55,16 +57,16 @@ export default function LoginScreen() {
           <GlassButton
             title="Login"
             onPress={handleLogin}
-            style={styles.loginButton}
+            style={[styles.loginButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>New here?</Text>
+            <Text style={[styles.footerText, { color: colors.secondaryText }]}>New here?</Text>
             <GlassButton
               title="Create Account"
               variant="secondary"
               onPress={handleCreateAccount}
-              style={styles.createAccountButton}
+              style={[styles.createAccountButton, { borderColor: colors.primary }]}
             />
           </View>
         </GlassContainer>

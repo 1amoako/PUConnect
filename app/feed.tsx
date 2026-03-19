@@ -1,22 +1,22 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView, 
-  TouchableOpacity, 
-  useWindowDimensions, 
-  Platform,
-  Image
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import AppLogo from "../components/AppLogo";
-import ChatView from "../components/ChatView";
 import PeopleView from "@/components/PeopleView";
 import ProfileView from "@/components/ProfileView";
 import SettingsView from "@/components/SettingsView";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
+import {
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AppLogo from "../components/AppLogo";
+import ChatView from "../components/ChatView";
+import { useTheme } from "../context/ThemeContext";
 
 interface CardData {
   id: string;
@@ -61,29 +61,30 @@ const SAMPLE_DATA: CardData[] = [
 ];
 
 function ContentCard({ data, isDesktop }: { data: CardData; isDesktop: boolean }) {
+  const { colors } = useTheme();
   return (
-    <TouchableOpacity style={[styles.card, isDesktop && styles.desktopCard]}>
+    <TouchableOpacity style={[styles.card, isDesktop && styles.desktopCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.cardHeader}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{data.type === "skill" ? "SKILL" : "PRODUCT"}</Text>
+        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.badgeText, { color: colors.background }]}>{data.type === "skill" ? "SKILL" : "PRODUCT"}</Text>
         </View>
-        <Ionicons name="heart-outline" size={20} color="#000" />
+        <Ionicons name="heart-outline" size={20} color={colors.text} />
       </View>
       
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{data.title}</Text>
-        <Text style={styles.cardAuthor}>by {data.author}</Text>
-        <Text style={styles.cardDescription} numberOfLines={2}>{data.description}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>{data.title}</Text>
+        <Text style={[styles.cardAuthor, { color: colors.secondaryText }]}>by {data.author}</Text>
+        <Text style={[styles.cardDescription, { color: colors.mutedText }]} numberOfLines={2}>{data.description}</Text>
       </View>
 
       <View style={styles.cardFooter}>
         <View style={styles.ratingBox}>
-          <Ionicons name="star" size={14} color="#000" />
-          <Text style={styles.ratingText}>{data.rating}</Text>
+          <Ionicons name="star" size={14} color={colors.text} />
+          <Text style={[styles.ratingText, { color: colors.text }]}>{data.rating}</Text>
         </View>
-        {data.price && <Text style={styles.priceText}>{data.price}</Text>}
-        <TouchableOpacity style={styles.viewButton}>
-          <Text style={styles.viewButtonText}>View</Text>
+        {data.price && <Text style={[styles.priceText, { color: colors.text }]}>{data.price}</Text>}
+        <TouchableOpacity style={[styles.viewButton, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.viewButtonText, { color: colors.background }]}>View</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -92,6 +93,7 @@ function ContentCard({ data, isDesktop }: { data: CardData; isDesktop: boolean }
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
+  const { colors, isDark } = useTheme();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
@@ -116,7 +118,7 @@ export default function FeedScreen() {
     if (activeTab === "discover") {
       title = (
         <View style={styles.stackedTitleContainer}>
-          <Text style={styles.stackedTitleText}>People</Text>
+          <Text style={[styles.stackedTitleText, { color: colors.text }]}>People</Text>
         </View>
       );
     }
@@ -124,7 +126,7 @@ export default function FeedScreen() {
     if (activeTab === "settings") title = "Settings";
 
     return (
-      <View style={[styles.topBar, !isDesktop && styles.topBarMobile]}>
+      <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         {isInSettings ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
@@ -133,14 +135,14 @@ export default function FeedScreen() {
               else setIsSettingsActive(false);
             }}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
+            <View style={[styles.backButtonCircle, { backgroundColor: colors.iconBackground }]}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </View>
           </TouchableOpacity>
         ) : renderLogo()}
         <View style={styles.topBarTitleContainer}>
           {typeof title === "string" ? (
-            <Text style={styles.topBarTitle}>{title}</Text>
+            <Text style={[styles.topBarTitle, { color: colors.text }]}>{title}</Text>
           ) : (
             title
           )}
@@ -160,7 +162,7 @@ export default function FeedScreen() {
                     <Ionicons
                       name={activeTab === "profile" ? "settings-outline" : "search-outline"}
                       size={28}
-                      color="#000"
+                      color={colors.text}
                     />
                   </TouchableOpacity>
               )}
@@ -169,11 +171,11 @@ export default function FeedScreen() {
                   style={styles.iconButton}
                   onPress={() => setActiveTab("discover")}
                 >
-                  <Ionicons name="people-outline" size={28} color="#000" />
+                  <Ionicons name="people-outline" size={28} color={colors.text} />
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="notifications-outline" size={28} color="#000" />
+                <Ionicons name="notifications-outline" size={28} color={colors.text} />
               </TouchableOpacity>
             </View>
           </View>
@@ -194,13 +196,14 @@ export default function FeedScreen() {
         ]}
         onPress={() => setActiveTab(name)}
       >
-        <View style={[styles.navIconContainer, !isDesktop && isActive && styles.navIconContainerActive]}>
-          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={24} color={isActive ? "#000" : "#444"} />
+        <View style={[styles.navIconContainer, !isDesktop && isActive && styles.navIconContainerActive, { backgroundColor: isActive ? colors.primary : 'transparent' }]}>
+          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={24} color={isActive ? colors.background : colors.mutedText} />
         </View>
         {(isDesktop || isActive) && (
           <Text style={[
             isDesktop ? styles.sideNavLink : styles.bottomNavLabel,
-            isActive && !isDesktop && styles.bottomNavLabelActive
+            isActive && !isDesktop && styles.bottomNavLabelActive,
+            { color: isActive ? colors.text : colors.mutedText }
           ]}>
             {label}
           </Text>
@@ -217,21 +220,21 @@ export default function FeedScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Desktop Sidebar */}
         {isDesktop && (
-          <View style={styles.sidebar}>
+          <View style={[styles.sidebar, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <View style={styles.sidebarContent}>
-              <Text style={styles.sidebarTitle}>Menu</Text>
+              <Text style={[styles.sidebarTitle, { color: colors.mutedText }]}>Menu</Text>
               {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
-              <View style={styles.sidebarDivider} />
+              <View style={[styles.sidebarDivider, { backgroundColor: colors.border }]} />
               {renderNavItem("settings", "settings-outline", "Settings")}
             </View>
           </View>
         )}
 
-        <View style={styles.mainContent}>
+        <View style={[styles.mainContent, { backgroundColor: colors.background }]}>
           {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
           
           {activeTab === "home" && (
@@ -278,12 +281,12 @@ export default function FeedScreen() {
             !isSettingsActive) && (
             <>
               <LinearGradient
-                colors={['transparent', 'rgba(255, 255, 255, 0.8)']}
+                colors={['transparent', isDark ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)']}
                 style={styles.footerTranslucent}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 0.15 }}
               />
-              <View style={styles.bottomNav}>
+              <View style={[styles.bottomNav, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
                 {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
               </View>
             </>
