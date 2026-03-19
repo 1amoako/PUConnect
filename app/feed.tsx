@@ -1,8 +1,9 @@
 import PeopleView from "@/components/PeopleView";
-import ProfileView from "@/components/ProfileView";
 import ProfileEditorView from "@/components/ProfileEditorView";
+import ProfileView from "@/components/ProfileView";
 import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
+import NotificationsView from "@/components/NotificationsView";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -102,6 +103,7 @@ export default function FeedScreen() {
   const [isSettingsActive, setIsSettingsActive] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
+  const [isNotificationsActive, setIsNotificationsActive] = useState(false);
 
   useEffect(() => {
     if (activeTab !== "profile") {
@@ -109,6 +111,7 @@ export default function FeedScreen() {
     }
     setIsSearchActive(false);
     setIsProfileEditorActive(false);
+    setIsNotificationsActive(false);
   }, [activeTab]);
 
   const renderLogo = () => (
@@ -122,6 +125,7 @@ export default function FeedScreen() {
     let title: React.ReactNode = "Your Feed";
     if (isSearchActive) title = "Search";
     else if (isProfileEditorActive) title = "Profile Editor";
+    else if (isNotificationsActive) title = "Notifications";
     else if (activeTab === "chat") title = "Chats";
     else if (activeTab === "discover") {
       title = (
@@ -135,12 +139,13 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive) && !isDesktop) ? (
+        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive || (isNotificationsActive && !isDesktop)) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
               if (isSearchActive) setIsSearchActive(false);
               else if (isProfileEditorActive) setIsProfileEditorActive(false);
+              else if (isNotificationsActive) setIsNotificationsActive(false);
               else if (activeTab === "settings") setActiveTab("home");
               else setIsSettingsActive(false);
             }}
@@ -157,7 +162,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && !isSearchActive && !isProfileEditorActive && (
+        {!isInSettings && !isSearchActive && !isProfileEditorActive && !isNotificationsActive && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (activeTab !== "profile" || !isDesktop) && (
@@ -186,18 +191,28 @@ export default function FeedScreen() {
                   <Ionicons name="people-outline" size={28} color={colors.text} />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="notifications-outline" size={28} color={colors.text} />
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={() => setIsNotificationsActive(!isNotificationsActive)}
+              >
+                <Ionicons 
+                  name={isNotificationsActive ? "notifications" : "notifications-outline"} 
+                  size={28} 
+                  color={colors.text} 
+                />
               </TouchableOpacity>
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive) && (
+        {(isInSettings || isSearchActive || isNotificationsActive) && (
           <View style={styles.utilitySection}>
-            {isDesktop && isSearchActive && (
+            {isDesktop && (isSearchActive || isNotificationsActive) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
-                onPress={() => setIsSearchActive(false)}
+                onPress={() => {
+                  setIsSearchActive(false);
+                  setIsNotificationsActive(false);
+                }}
               >
                 <Ionicons name="close-outline" size={32} color={colors.text} />
               </TouchableOpacity>
@@ -262,6 +277,8 @@ export default function FeedScreen() {
           
           {isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
+          ) : isNotificationsActive ? (
+            <NotificationsView isDesktop={isDesktop} />
           ) : isProfileEditorActive ? (
             <ProfileEditorView isDesktop={isDesktop} onBack={() => setIsProfileEditorActive(false)} />
           ) : (
