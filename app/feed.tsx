@@ -1,5 +1,6 @@
 import PeopleView from "@/components/PeopleView";
 import ProfileView from "@/components/ProfileView";
+import ProfileEditorView from "@/components/ProfileEditorView";
 import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
 import { Ionicons } from "@expo/vector-icons";
@@ -100,12 +101,14 @@ export default function FeedScreen() {
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
   const [isSettingsActive, setIsSettingsActive] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
 
   useEffect(() => {
     if (activeTab !== "profile") {
       setIsSettingsActive(false);
     }
     setIsSearchActive(false);
+    setIsProfileEditorActive(false);
   }, [activeTab]);
 
   const renderLogo = () => (
@@ -118,6 +121,7 @@ export default function FeedScreen() {
     const isInSettings = activeTab === "settings" || (activeTab === "profile" && isSettingsActive);
     let title: React.ReactNode = "Your Feed";
     if (isSearchActive) title = "Search";
+    else if (isProfileEditorActive) title = "Profile Editor";
     else if (activeTab === "chat") title = "Chats";
     else if (activeTab === "discover") {
       title = (
@@ -131,11 +135,12 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {((isInSettings || (isSearchActive && !isDesktop)) && !isDesktop) ? (
+        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
               if (isSearchActive) setIsSearchActive(false);
+              else if (isProfileEditorActive) setIsProfileEditorActive(false);
               else if (activeTab === "settings") setActiveTab("home");
               else setIsSettingsActive(false);
             }}
@@ -152,7 +157,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && !isSearchActive && (
+        {!isInSettings && !isSearchActive && !isProfileEditorActive && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (
@@ -257,6 +262,8 @@ export default function FeedScreen() {
           
           {isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
+          ) : isProfileEditorActive ? (
+            <ProfileEditorView isDesktop={isDesktop} onBack={() => setIsProfileEditorActive(false)} />
           ) : (
             <>
               {activeTab === "home" && (
@@ -281,7 +288,7 @@ export default function FeedScreen() {
               )}
 
               {activeTab === "discover" && (
-                <PeopleView isDesktop={isDesktop} />
+                <PeopleView isDesktop={isDesktop} onEditProfile={() => setIsProfileEditorActive(true)} />
               )}
 
               {activeTab === "profile" && (
@@ -300,7 +307,7 @@ export default function FeedScreen() {
               {(!isDesktop && 
                 ["home", "chat", "discover", "profile"].includes(activeTab) && 
                 !(activeTab === "chat" && isMobileChatActive) && 
-                !isSettingsActive) && (
+                !isSettingsActive && !isProfileEditorActive) && (
                 <>
                   <LinearGradient
                     colors={['transparent', isDark ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)']}

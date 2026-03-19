@@ -5,6 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 
 interface PeopleViewProps {
   isDesktop: boolean;
+  onEditProfile: () => void;
 }
 
 type SubTab = "people" | "me";
@@ -24,9 +25,10 @@ const MOCK_PROFILES: UserProfile[] = [
 
 const MY_PROFILE: UserProfile | null = { id: "me1", name: "Jacob Zero", status: "Looking for new projects.", skills: ["React Native", "TypeScript", "UI Design"] };
 
-export default function PeopleView({ isDesktop }: PeopleViewProps) {
+export default function PeopleView({ isDesktop, onEditProfile }: PeopleViewProps) {
   const { colors, isDark } = useTheme();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("people");
+  const hasProfile = MY_PROFILE !== null;
 
   const renderBanner = () => (
     <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
@@ -109,19 +111,19 @@ export default function PeopleView({ isDesktop }: PeopleViewProps) {
   };
 
   const renderFAB = () => {
+    if (activeSubTab === "people") return null;
+
     let icon: any = "person-add-outline";
-    let label = "Create Profile";
-    let onPress = () => {};
+    let label = hasProfile ? "Update Your Profile" : "Create Your Profile";
 
     if (activeSubTab === "me") {
-      icon = "add";
-      label = "Manage";
+      icon = hasProfile ? "create-outline" : "add";
     }
 
     return (
       <TouchableOpacity 
         style={[styles.floatingButton, isDesktop ? styles.floatingButtonDesktop : styles.floatingButtonMobile, { backgroundColor: colors.primary }]} 
-        onPress={onPress}
+        onPress={onEditProfile}
       >
         <Ionicons name={icon} size={24} color={colors.background} />
         <Text style={[styles.floatingButtonText, { color: colors.background }]}>{label}</Text>
