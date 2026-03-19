@@ -1,20 +1,22 @@
+import AdminDashboard from "@/components/AdminDashboard";
+import NotificationsView from "@/components/NotificationsView";
 import PeopleView from "@/components/PeopleView";
 import ProfileEditorView from "@/components/ProfileEditorView";
 import ProfileView from "@/components/ProfileView";
 import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
-import NotificationsView from "@/components/NotificationsView";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    useWindowDimensions,
-    View
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppLogo from "../components/AppLogo";
@@ -96,6 +98,8 @@ function ContentCard({ data, isDesktop }: { data: CardData; isDesktop: boolean }
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
+  const { role } = useLocalSearchParams();
+  const isAdmin = role === "admin";
   const { colors, isDark } = useTheme();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
@@ -126,6 +130,7 @@ export default function FeedScreen() {
     if (isSearchActive) title = "Search";
     else if (isProfileEditorActive) title = "Profile Editor";
     else if (isNotificationsActive) title = "Notifications";
+    else if (activeTab === "admin") title = "Admin Panel";
     else if (activeTab === "chat") title = "Chats";
     else if (activeTab === "discover") {
       title = (
@@ -225,19 +230,26 @@ export default function FeedScreen() {
 
   const renderNavItem = (name: string, icon: any, label: string) => {
     const isActive = activeTab === name;
+    const isSpecial = name === "admin";
     return (
       <TouchableOpacity 
         key={name} 
         style={[
           isDesktop ? styles.sideNavItem : styles.bottomNavItem,
-          !isDesktop && isActive && styles.bottomNavItemActive
+          !isDesktop && isActive && styles.bottomNavItemActive,
+          !isDesktop && isSpecial && styles.specialBottomNavItem
         ]}
         onPress={() => setActiveTab(name)}
       >
-        <View style={[styles.navIconContainer, !isDesktop && isActive && styles.navIconContainerActive, { backgroundColor: isActive ? colors.primary : 'transparent' }]}>
-          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={24} color={isActive ? colors.background : colors.mutedText} />
+        <View style={[
+          styles.navIconContainer, 
+          !isDesktop && isActive && styles.navIconContainerActive, 
+          !isDesktop && isSpecial && [styles.specialIconContainer, { backgroundColor: colors.primary, borderColor: colors.background }],
+          { backgroundColor: isActive && !isSpecial ? colors.primary : (isSpecial ? colors.primary : 'transparent') }
+        ]}>
+          <Ionicons name={isActive ? icon.replace("-outline", "") : icon} size={isSpecial && !isDesktop ? 28 : 24} color={isActive || isSpecial ? colors.background : colors.mutedText} />
         </View>
-        {(isDesktop || isActive) && (
+        {(isDesktop || (isActive && !isSpecial)) && (
           <Text style={[
             isDesktop ? styles.sideNavLink : styles.bottomNavLabel,
             isActive && !isDesktop && styles.bottomNavLabelActive,
@@ -253,6 +265,7 @@ export default function FeedScreen() {
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
     { name: "chat", icon: "chatbubble-outline", label: "Chat" },
+    ...(isAdmin ? [{ name: "admin", icon: "shield-outline", label: "Admin" }] : []),
     { name: "discover", icon: "compass-outline", label: "People" },
     { name: "profile", icon: "person-outline", label: "Profile" },
   ];
@@ -306,6 +319,10 @@ export default function FeedScreen() {
 
               {activeTab === "discover" && (
                 <PeopleView isDesktop={isDesktop} onEditProfile={() => setIsProfileEditorActive(true)} />
+              )}
+
+              {activeTab === "admin" && isAdmin && (
+                <AdminDashboard isDesktop={isDesktop} />
               )}
 
               {activeTab === "profile" && (
@@ -640,5 +657,20 @@ const styles = StyleSheet.create({
   bottomNavLabelActive: {
     color: "#000",
     fontWeight: "700",
+  },
+  specialBottomNavItem: {
+    position: "relative",
+    top: -20, // Elevation
+  },
+  specialIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.3)",
+    elevation: 20,
+    borderWidth: 4,
+    borderColor: "#fff", // Adjust based on theme in real implementation if needed
   },
 });

@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 export default function SuccessScreen() {
   const router = useRouter();
+  const { role } = useLocalSearchParams();
   const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -46,7 +47,10 @@ export default function SuccessScreen() {
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(() => {
-        router.replace("/feed");
+        router.replace({
+          pathname: "/feed",
+          params: { role }
+        });
       });
     }, 1500);
 

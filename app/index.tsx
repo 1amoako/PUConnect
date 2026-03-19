@@ -12,10 +12,13 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = (isAdmin = false) => {
     // Implement login logic here
-    console.log("Login with:", username, password);
-    router.replace("/success");
+    console.log("Login with:", username, password, "isAdmin:", isAdmin);
+    router.replace({
+      pathname: "/success",
+      params: { role: isAdmin ? "admin" : "user" }
+    });
   };
 
   const handleCreateAccount = () => {
@@ -54,11 +57,19 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          <GlassButton
-            title="Login"
-            onPress={handleLogin}
-            style={[styles.loginButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          />
+          <View style={styles.loginButtons}>
+            <GlassButton
+              title="Login"
+              onPress={() => handleLogin(false)}
+              style={[styles.loginButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+            />
+            <GlassButton
+              title="Login as Admin"
+              variant="secondary"
+              onPress={() => handleLogin(true)}
+              style={[styles.adminButton, { borderColor: colors.primary }]}
+            />
+          </View>
 
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.secondaryText }]}>New here?</Text>
@@ -103,8 +114,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
   },
-  loginButton: {
+  loginButtons: {
     marginTop: 20,
+    gap: 12,
+  },
+  loginButton: {
+    width: "100%",
+  },
+  adminButton: {
+    width: "100%",
   },
   forgotPasswordContainer: {
     alignItems: "flex-end",
