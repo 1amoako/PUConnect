@@ -1,6 +1,7 @@
 import PeopleView from "@/components/PeopleView";
 import ProfileView from "@/components/ProfileView";
 import SettingsView from "@/components/SettingsView";
+import SearchView from "@/components/SearchView";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -98,11 +99,13 @@ export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState("home");
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
   const [isSettingsActive, setIsSettingsActive] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   useEffect(() => {
     if (activeTab !== "profile") {
       setIsSettingsActive(false);
     }
+    setIsSearchActive(false);
   }, [activeTab]);
 
   const renderLogo = () => (
@@ -156,6 +159,8 @@ export default function FeedScreen() {
                     onPress={() => {
                       if (activeTab === "profile") {
                         setIsSettingsActive(true);
+                      } else {
+                        setIsSearchActive(true);
                       }
                     }}
                   >
@@ -223,7 +228,7 @@ export default function FeedScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Desktop Sidebar */}
-        {isDesktop && (
+        {isDesktop && !isSearchActive && (
           <View style={[styles.sidebar, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <View style={styles.sidebarContent}>
               <Text style={[styles.sidebarTitle, { color: colors.mutedText }]}>Menu</Text>
@@ -235,60 +240,66 @@ export default function FeedScreen() {
         )}
 
         <View style={[styles.mainContent, { backgroundColor: colors.background }]}>
-          {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
-          
-          {activeTab === "home" && (
-            <ScrollView 
-              style={styles.feedScroll}
-              contentContainerStyle={styles.feedContainer}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
-                {SAMPLE_DATA.map(item => (
-                  <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
-                ))}
-              </View>
-            </ScrollView>
-          )}
-
-          {activeTab === "chat" && (
-            <ChatView 
-              isDesktop={isDesktop} 
-              onActiveChatChange={setIsMobileChatActive} 
-            />
-          )}
-
-          {activeTab === "discover" && (
-            <PeopleView isDesktop={isDesktop} />
-          )}
-
-          {activeTab === "profile" && (
-            isSettingsActive ? (
-              <SettingsView isDesktop={isDesktop} onBack={() => setIsSettingsActive(false)} />
-            ) : (
-              <ProfileView isDesktop={isDesktop} />
-            )
-          )}
-
-          {activeTab === "settings" && (
-            <SettingsView isDesktop={isDesktop} onBack={() => setActiveTab("home")} />
-          )}
-
-          {/* Mobile Bottom Nav */}
-          {(!isDesktop && 
-            ["home", "chat", "discover", "profile"].includes(activeTab) && 
-            !(activeTab === "chat" && isMobileChatActive) && 
-            !isSettingsActive) && (
+          {isSearchActive ? (
+            <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
+          ) : (
             <>
-              <LinearGradient
-                colors={['transparent', isDark ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)']}
-                style={styles.footerTranslucent}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 0.15 }}
-              />
-              <View style={[styles.bottomNav, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-                {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
-              </View>
+              {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
+              
+              {activeTab === "home" && (
+                <ScrollView 
+                  style={styles.feedScroll}
+                  contentContainerStyle={styles.feedContainer}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
+                    {SAMPLE_DATA.map(item => (
+                      <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
+                    ))}
+                  </View>
+                </ScrollView>
+              )}
+
+              {activeTab === "chat" && (
+                <ChatView 
+                  isDesktop={isDesktop} 
+                  onActiveChatChange={setIsMobileChatActive} 
+                />
+              )}
+
+              {activeTab === "discover" && (
+                <PeopleView isDesktop={isDesktop} />
+              )}
+
+              {activeTab === "profile" && (
+                isSettingsActive ? (
+                  <SettingsView isDesktop={isDesktop} onBack={() => setIsSettingsActive(false)} />
+                ) : (
+                  <ProfileView isDesktop={isDesktop} />
+                )
+              )}
+
+              {activeTab === "settings" && (
+                <SettingsView isDesktop={isDesktop} onBack={() => setActiveTab("home")} />
+              )}
+
+              {/* Mobile Bottom Nav */}
+              {(!isDesktop && 
+                ["home", "chat", "discover", "profile"].includes(activeTab) && 
+                !(activeTab === "chat" && isMobileChatActive) && 
+                !isSettingsActive) && (
+                <>
+                  <LinearGradient
+                    colors={['transparent', isDark ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)']}
+                    style={styles.footerTranslucent}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 0.15 }}
+                  />
+                  <View style={[styles.bottomNav, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+                    {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+                  </View>
+                </>
+              )}
             </>
           )}
         </View>
