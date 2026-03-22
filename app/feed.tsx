@@ -11,14 +11,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
+import Animated, { 
+    useAnimatedStyle, 
+    useSharedValue, 
+    withSpring 
+} from "react-native-reanimated";
 import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppLogo from "../components/AppLogo";
@@ -106,6 +111,32 @@ export default function FeedScreen() {
   const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
+  const activeTabX = useSharedValue(0);
+  const indicatorWidth = useSharedValue(0);
+  const [tabLayouts, setTabLayouts] = useState<{[key: string]: {x: number, width: number}}>({});
+
+  const navItems = [
+    { name: "home", icon: "home-outline", label: "Home" },
+    { name: "chat", icon: "chatbubble-outline", label: "Chat" },
+    ...(isAdmin ? [{ name: "admin", icon: "shield-checkmark-outline", label: "Admin" }] : []),
+    { name: "discover", icon: "compass-outline", label: "People" },
+    { name: "profile", icon: "person-outline", label: "Profile" },
+  ];
+
+  useEffect(() => {
+    const layout = tabLayouts[activeTab];
+    if (layout) {
+        activeTabX.value = withSpring(layout.x);
+        indicatorWidth.value = withSpring(layout.width);
+    }
+  }, [activeTab, tabLayouts]);
+
+  const animatedIndicatorStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: activeTabX.value }],
+      width: indicatorWidth.value,
+    };
+  });
 
   useEffect(() => {
     if (activeTab !== "profile") {
@@ -272,21 +303,28 @@ export default function FeedScreen() {
     return (
       <TouchableOpacity 
         key={name} 
+        activeOpacity={0.7}
+        onLayout={(event) => {
+            const { x, width } = event.nativeEvent.layout;
+            setTabLayouts(prev => ({ ...prev, [name]: { x, width } }));
+        }}
         style={[
           isDesktop ? styles.sideNavItem : styles.bottomNavItem,
           isDesktop && isActive && [styles.sideNavItemActive, { backgroundColor: colors.iconBackground }],
-          !isDesktop && isActive && styles.bottomNavItemActive,
-          showSpecialStyle && styles.specialBottomNavItem
         ]}
         onPress={() => setActiveTab(name)}
       >
-        {showSpecialStyle && (
-          <View style={[styles.navHole, { backgroundColor: colors.background }]} />
-        )}
         <View style={[
           styles.navIconContainer, 
-          !isDesktop && isActive && styles.navIconContainerActive, 
-          showSpecialStyle && [styles.specialIconContainer, { backgroundColor: colors.primary, borderColor: colors.background }],
+          showSpecialStyle && [styles.specialIconContainer, { backgroundColor: colors.primary }],
+          isActive && showSpecialStyle && { 
+            borderColor: colors.background, 
+            borderWidth: 2,
+            shadowColor: colors.primary,
+            shadowOpacity: 0.8,
+            shadowRadius: 15,
+            elevation: 20
+          }
         ]}>
           <Ionicons 
             name={isActive ? icon.replace("-outline", "") : icon} 
@@ -297,7 +335,6 @@ export default function FeedScreen() {
         {(isDesktop || (isActive && !isSpecial)) && (
           <Text style={[
             isDesktop ? styles.sideNavLink : styles.bottomNavLabel,
-            isActive && !isDesktop && styles.bottomNavLabelActive,
             { color: isActive ? (isDesktop ? colors.primary : colors.text) : colors.mutedText }
           ]}>
             {label}
@@ -306,14 +343,6 @@ export default function FeedScreen() {
       </TouchableOpacity>
     );
   };
-
-  const navItems = [
-    { name: "home", icon: "home-outline", label: "Home" },
-    { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    ...(isAdmin ? [{ name: "admin", icon: "shield-checkmark-outline", label: "Admin" }] : []),
-    { name: "discover", icon: "compass-outline", label: "People" },
-    { name: "profile", icon: "person-outline", label: "Profile" },
-  ];
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -414,13 +443,16 @@ export default function FeedScreen() {
                 !isSettingsActive && !isProfileEditorActive) && (
                 <>
                   <LinearGradient
-                    colors={['transparent', isDark ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)']}
+                    colors={['transparent', isDark ? colors.background + 'CC' : colors.background + 'E6', colors.background]}
                     style={styles.footerTranslucent}
                     start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 0.15 }}
+                    end={{ x: 0.5, y: 0.4 }}
                   />
-                  <View style={[styles.bottomNav, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-                    {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+                  <View style={[styles.bottomNav, { backgroundColor: colors.background + 'B3', borderColor: colors.border }]}>
+                    <Animated.View style={[styles.activeIndicator, animatedIndicatorStyle, { backgroundColor: colors.primary + '1A' }]} />
+                    <View style={styles.bottomNavContent}>
+                      {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+                    </View>
                   </View>
                 </>
               )}
@@ -687,76 +719,61 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: "absolute",
-    bottom: 25,
+    bottom: 30,
     left: 20,
     right: 20,
-    height: 75,
-    backgroundColor: "#fff",
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    paddingBottom: Platform.OS === "ios" ? 5 : 0,
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)",
+    elevation: 10,
+    overflow: "visible",
+  },
+  bottomNavContent: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderRadius: 40,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 5 : 0,
-    boxShadow: "0px 12px 30px rgba(0, 0, 0, 0.2)",
-    elevation: 15,
+  },
+  activeIndicator: {
+    position: "absolute",
+    height: 44, // Matches standard icon container height
+    borderRadius: 22,
+    top: 13, // Center vertically (70 - 44 = 26 / 2 = 13)
   },
   footerTranslucent: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100, // Exactly matches top of navbar (bottom 25 + height 75)
+    height: 120,
   },
   bottomNavItem: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 65,
     height: "100%",
   },
-  bottomNavItemActive: {
-    // Add specific styles if needed for the container
-  },
   navIconContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: 4,
-  },
-  navIconContainerActive: {
-    backgroundColor: "#f0f0f0",
   },
   bottomNavLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#666",
-  },
-  bottomNavLabelActive: {
-    color: "#000",
+    fontSize: 10,
     fontWeight: "700",
-  },
-  specialBottomNavItem: {
-    position: "relative",
-    top: -20, // Elevation
+    marginTop: 2,
   },
   specialIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.3)",
-    elevation: 20,
-    borderWidth: 4,
-  },
-  navHole: {
-    position: "absolute",
-    top: -32,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    zIndex: -1,
+    boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.25)",
+    elevation: 8,
+    transform: [{ translateY: -15 }],
   },
 });
