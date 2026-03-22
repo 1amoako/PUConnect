@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+    Animated,
+    Easing,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -38,7 +40,50 @@ export default function ProfileEditorView({ isDesktop, onBack, initialData }: Pr
   const [newSkill, setNewSkill] = useState("");
   
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const dot1Anim = useRef(new Animated.Value(0)).current;
+  const dot2Anim = useRef(new Animated.Value(0)).current;
+  const dot3Anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isLoading) {
+      // Material You style bouncing dots animation
+      const animateDot = (dot: Animated.Value, delay: number) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(dot, {
+              toValue: 1,
+              duration: 400,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0,
+              duration: 400,
+              easing: Easing.in(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      };
+
+      animateDot(dot1Anim, 0);
+      animateDot(dot2Anim, 150);
+      animateDot(dot3Anim, 300);
+    } else {
+      // Stop all animations
+      dot1Anim.stopAnimation();
+      dot2Anim.stopAnimation();
+      dot3Anim.stopAnimation();
+      dot1Anim.setValue(0);
+      dot2Anim.setValue(0);
+      dot3Anim.setValue(0);
+    }
+  }, [isLoading, dot1Anim, dot2Anim, dot3Anim]);
 
   const addSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
@@ -52,19 +97,92 @@ export default function ProfileEditorView({ isDesktop, onBack, initialData }: Pr
   };
 
   const handleInitialSubmit = () => {
+    setErrorMessage("");
     setShowConfirmModal(true);
   };
 
   const handleConfirmSubmit = () => {
     setShowConfirmModal(false);
+    setIsLoading(true);
+    setErrorMessage("");
+
     // Simulate submission process
-    console.log("Submitting profile for review:", { name, handle, description, skills, contact });
-    setIsSubmitted(true);
+    setTimeout(() => {
+      const isSuccess = Math.random() > 0.2;
+      setIsLoading(false);
+
+      if (isSuccess) {
+        console.log("Profile submitted:", { name, handle, description, skills, contact });
+        setIsSubmitted(true);
+      } else {
+        setErrorMessage("Unable to submit profile right now. Please check your connection and try again.");
+      }
+    }, 1600);
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot1Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot2Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot3Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+        </View>
+        <Text style={[styles.successTitle, { color: colors.text, marginTop: 18 }]}>Submitting your profile...</Text>
+        <Text style={[styles.successDescription, { color: colors.mutedText }]}>Please wait while we save your details.</Text>
+      </View>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}> 
+        <Ionicons name="alert-circle" size={80} color={colors.danger} />
+        <Text style={[styles.successTitle, { color: colors.text, marginTop: 18 }]}>Submission Failed</Text>
+        <Text style={[styles.successDescription, { color: colors.mutedText }]}>{errorMessage}</Text>
+        <GlassButton title="Try Again" onPress={handleInitialSubmit} style={styles.successButton} />
+        <GlassButton title="Cancel" variant="secondary" onPress={onBack} style={styles.successButton} />
+      </View>
+    );
+  }
 
   if (isSubmitted) {
     return (
       <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}>
+
         <View style={[styles.successIconContainer, { backgroundColor: colors.iconBackground }]}>
           <Ionicons name="time-outline" size={80} color={colors.primary} />
         </View>
@@ -334,8 +452,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 30,
+  },  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    height: 40,
   },
-  successTitle: {
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },  successTitle: {
     fontSize: 28,
     fontWeight: "800",
     textAlign: "center",
