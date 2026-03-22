@@ -44,7 +44,13 @@ const MOCK_REVIEWS: Review[] = [
   },
 ];
 
-export default function ReviewSection({ providerName }: { providerName: string }) {
+export default function ReviewSection({ 
+  providerName, 
+  hasCompletedService = false 
+}: { 
+  providerName: string;
+  hasCompletedService?: boolean;
+}) {
   const { colors } = useTheme();
 
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
@@ -131,17 +137,24 @@ export default function ReviewSection({ providerName }: { providerName: string }
       </View>
 
       {/* Write a Review Toggle */}
-      {!isWriting && (
-        <TouchableOpacity 
-          style={[styles.writeToggle, { borderColor: colors.border, backgroundColor: colors.cardBackground }]}
-          onPress={toggleWrite}
-          activeOpacity={0.7}
-        >
-          <Ionicons name={userReview ? "pencil" : "create-outline"} size={22} color={colors.primary} />
-          <Text style={[styles.writeToggleText, { color: colors.text }]}>
-            {userReview ? "Edit your review" : "Write a review"}
-          </Text>
-        </TouchableOpacity>
+      {!isWriting && (hasCompletedService || userReview) && (
+        <View style={styles.promptContainer}>
+          {hasCompletedService && !userReview && (
+             <Text style={[styles.pendingReviewText, { color: colors.primary }]}>
+                ✨ You have a pending review for a recent service!
+             </Text>
+          )}
+          <TouchableOpacity 
+            style={[styles.writeToggle, { borderColor: colors.border, backgroundColor: colors.cardBackground }]}
+            onPress={toggleWrite}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={userReview ? "pencil" : "create-outline"} size={22} color={colors.primary} />
+            <Text style={[styles.writeToggleText, { color: colors.text }]}>
+              {userReview ? "Edit your review" : "Write a review"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Inline Form */}
@@ -315,6 +328,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "dashed",
     marginBottom: 25,
+  },
+  promptContainer: {
+    marginBottom: 5,
+  },
+  pendingReviewText: {
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 10,
   },
   writeToggleText: {
     fontSize: 16,

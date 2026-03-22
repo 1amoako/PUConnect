@@ -91,7 +91,7 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
 
         {/* Reviews Section */}
         <View style={styles.section}>
-          <ReviewSection providerName={profile.name} />
+          <ReviewSection providerName={profile.name} hasCompletedService={profile.id === "1"} />
         </View>
 
       </ScrollView>
