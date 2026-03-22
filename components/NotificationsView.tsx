@@ -135,7 +135,7 @@ export default function NotificationsView({ isDesktop }: NotificationsViewProps)
             <Ionicons name="notifications-off-outline" size={64} color={colors.mutedText} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>No notifications</Text>
             <Text style={[styles.emptySub, { color: colors.mutedText }]}>
-              We'll let you know when something important happens.
+              We&apos;ll let you know when something important happens.
             </Text>
           </View>
         )}

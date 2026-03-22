@@ -122,7 +122,7 @@ export default function FeedScreen() {
         activeTabX.value = withSpring(layout.x);
         indicatorWidth.value = withSpring(layout.width);
     }
-  }, [activeTab, tabLayouts]);
+  }, [activeTab, tabLayouts, activeTabX, indicatorWidth]);
 
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {

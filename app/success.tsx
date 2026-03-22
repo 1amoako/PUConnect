@@ -55,7 +55,7 @@ export default function SuccessScreen() {
     }, 1500);
 
     return () => clearTimeout(fadeTimer);
-  }, []);
+  }, [opacityAnim, pageFadeAnim, role, rotateAnim, router, scaleAnim]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],

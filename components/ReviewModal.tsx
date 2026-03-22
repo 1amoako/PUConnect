@@ -55,7 +55,7 @@ export default function ReviewModal({ isVisible, onClose, onSubmit, providerName
         
         // Wait another second to show success before closing, or let the user close it
         // For now, we'll let the user click "Done" in the success view
-    } catch (err) {
+    } catch {
         setError("Something went wrong. Please try again.");
     } finally {
         setIsLoading(false);

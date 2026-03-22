@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { GlassButton } from "../components/GlassButton";
 import { GlassContainer } from "../components/GlassContainer";
 
@@ -73,7 +73,7 @@ export default function OTPScreen() {
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Didn't receive code?</Text>
+            <Text style={styles.footerText}>Didn&apos;t receive code?</Text>
             <GlassButton
               title="Resend Code"
               variant="secondary"

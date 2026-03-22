@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 interface ChatItem {
@@ -64,24 +64,25 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
+  const handleChatSelect = React.useCallback((chatId: string | null) => {
+    setActiveChat(chatId);
+    if (onActiveChatChange && !isDesktop) {
+      onActiveChatChange(chatId !== null);
+    }
+  }, [onActiveChatChange, isDesktop]);
+
+  // Set initial active chat if provided
   React.useEffect(() => {
     if (initialActiveChat) {
       handleChatSelect(initialActiveChat);
     }
-  }, [initialActiveChat]);
+  }, [initialActiveChat, handleChatSelect]);
 
   // Reset messages when switching chats to prevent state spillage
   React.useEffect(() => {
     setMessages(SAMPLE_MESSAGES);
     setIsHeaderMenuVisible(false); // Close menu when switching chats
   }, [activeChat]);
-
-  const handleChatSelect = (chatId: string | null) => {
-    setActiveChat(chatId);
-    if (onActiveChatChange && !isDesktop) {
-      onActiveChatChange(chatId !== null);
-    }
-  };
 
   const renderChatItem = (chat: ChatItem) => {
     const isActive = activeChat === chat.id;

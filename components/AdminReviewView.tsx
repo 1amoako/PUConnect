@@ -259,7 +259,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             <Text style={[styles.itemTime, { color: colors.mutedText }]}>{item.time}</Text>
           </View>
           <Text style={[styles.itemDescription, { color: colors.secondaryText }]} numberOfLines={2}>
-            "{item.suggestion}"
+            &quot;{item.suggestion}&quot;
           </Text>
           <View style={styles.itemFooter}>
             <View style={styles.actionButtons}>

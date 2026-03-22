@@ -13,7 +13,7 @@ interface SettingsViewProps {
 
 export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
   const router = useRouter();
-  const { theme, colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark, toggleTheme } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 

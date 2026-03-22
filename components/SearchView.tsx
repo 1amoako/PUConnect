@@ -87,7 +87,7 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyStateSub, { color: colors.mutedText }]}>No results found for "{searchQuery}" in {activeCategory}.</Text>
+            <Text style={[styles.emptyStateSub, { color: colors.mutedText }]}>No results found for &quot;{searchQuery}&quot; in {activeCategory}.</Text>
           </View>
         )}
       </ScrollView>
