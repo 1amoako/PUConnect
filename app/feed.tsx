@@ -39,6 +39,8 @@ interface CardData {
   rating: number;
   image: string;
   description: string;
+  reviewsCount?: number;
+  recentReviews?: any[];
 }
 
 const SAMPLE_DATA: CardData[] = [
@@ -47,18 +49,27 @@ const SAMPLE_DATA: CardData[] = [
     type: "skill",
     title: "UI/UX Design Studio",
     author: "Sarah Jenkins",
-    rating: 4.9,
     description: "I help early-stage startups build their first digital services with high-end minimal design.",
     image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
+    rating: 4.9,
+    reviewsCount: 124,
+    recentReviews: [
+      { id: "r1", authorName: "Marcus T.", rating: 5, comment: "Sarah is incredibly talented. Her minimalist approach was exactly what our startup needed.", date: "2 days ago" },
+      { id: "r2", authorName: "Elena V.", rating: 4, comment: "Great designs! Communication was overall very good.", date: "1 week ago" }
+    ]
   },
   {
     id: "3",
     type: "skill",
     title: "Fullstack Development",
     author: "David Chen",
-    rating: 5.0,
     description: "React Native specialist available for building scalable mobile applications.",
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    rating: 5.0,
+    reviewsCount: 89,
+    recentReviews: [
+      { id: "r3", authorName: "James L.", rating: 5, comment: "Excellent developer. The code was clean and well-documented.", date: "3 days ago" }
+    ]
   },
 ];
 
@@ -167,8 +178,14 @@ export default function FeedScreen() {
       image: profileId === "1" 
         ? "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80"
         : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-      rating: 4.9,
-      reviews: 24,
+      rating: profileId === "1" ? 4.9 : 5.0,
+      reviewsCount: profileId === "1" ? 124 : 89,
+      recentReviews: profileId === "1" ? [
+        { id: "r1", authorName: "Marcus T.", rating: 5, comment: "Sarah is incredibly talented. Her minimalist approach was exactly what our startup needed.", date: "2 days ago" },
+        { id: "r2", authorName: "Elena V.", rating: 4, comment: "Great designs! Communication was overall very good.", date: "1 week ago" }
+      ] : [
+        { id: "r3", authorName: "James L.", rating: 5, comment: "Excellent developer. The code was clean and well-documented.", date: "3 days ago" }
+      ],
     };
     setSelectedProfile(mockProfile);
   };
