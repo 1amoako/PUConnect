@@ -141,7 +141,7 @@ export default function ReviewSection({
         <View style={styles.promptContainer}>
           {hasCompletedService && !userReview && (
              <Text style={[styles.pendingReviewText, { color: colors.primary }]}>
-                ✨ You have a pending review for a recent service!
+                ✨  You&apos;ve recently had a service rendered! Feel free to share your experience by leaving a review.!
              </Text>
           )}
           <TouchableOpacity 
