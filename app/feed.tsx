@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   topBarMobile: {
-    height: 70,
+    height: 50,
   },
   topBarTitleContainer: {
     position: "absolute",
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: "absolute",
-    bottom: 30,
+    bottom: 10,
     left: 20,
     right: 20,
     height: 70,
