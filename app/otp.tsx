@@ -1,19 +1,42 @@
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { GlassButton } from "../components/GlassButton";
+import React, { useRef, useState, useEffect } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import Animated, { FadeIn, SlideInRight, Layout } from "react-native-reanimated";
+import { Feather } from "@expo/vector-icons";
 import { GlassContainer } from "../components/GlassContainer";
+import { useTheme } from "../context/ThemeContext";
 
 export default function OTPScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
 
   const handleVerify = () => {
     if (otp.length !== 6) return;
-    console.log("Verifying OTP:", otp);
-    router.replace("/success");
+    setError(null);
+    setIsLoading(true);
+
+    // Simulate network request
+    setTimeout(() => {
+      setIsLoading(false);
+      if (otp === "123456") {
+        console.log("Verifying OTP:", otp);
+        router.replace("/success");
+      } else {
+        setError("Invalid code. Please try again.");
+        setOtp("");
+      }
+    }, 1500);
   };
+
+  useEffect(() => {
+    if (otp.length === 6) {
+      handleVerify();
+    }
+  }, [otp]);
 
   const handleBoxPress = () => {
     inputRef.current?.focus();
@@ -25,63 +48,96 @@ export default function OTPScreen() {
       const char = otp[i] || "";
       const isFocused = otp.length === i;
       boxes.push(
-        <View 
+        <Animated.View 
           key={i} 
+          layout={Layout.springify()}
           style={[
             styles.otpBox,
-            isFocused && styles.otpBoxFocused,
-            char !== "" && styles.otpBoxFilled
+            { 
+              backgroundColor: colors.background,
+              borderColor: isFocused ? colors.primary : (char !== "" ? colors.text : colors.border)
+            },
+            isFocused && styles.otpBoxFocused
           ]}
         >
-          <Text style={styles.otpText}>{char}</Text>
-        </View>
+          <Text style={[styles.otpText, { color: colors.text }]}>{char}</Text>
+        </Animated.View>
       );
     }
     return boxes;
   };
 
   return (
-    <View style={styles.background}>
+    <View style={[styles.background, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <GlassContainer style={styles.card}>
-          <Text style={styles.title}>Verify Account</Text>
-          <Text style={styles.subtitle}>Enter the 6-digit code sent to your email</Text>
-
-          <Pressable style={styles.otpContainer} onPress={handleBoxPress}>
-            {renderOtpBoxes()}
-          </Pressable>
-
-          <TextInput
-            ref={inputRef}
-            value={otp}
-            onChangeText={(text) => {
-              if (text.length <= 6) setOtp(text.replace(/[^0-9]/g, ""));
-            }}
-            keyboardType="number-pad"
-            maxLength={6}
-            style={styles.hiddenInput}
-            autoFocus
-          />
-
-          <GlassButton
-            title="Verify & Activate"
-            onPress={handleVerify}
-            style={[styles.verifyButton, otp.length !== 6 && styles.buttonDisabled]}
-          />
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Didn&apos;t receive code?</Text>
-            <GlassButton
-              title="Resend Code"
-              variant="secondary"
-              onPress={() => console.log("Resending OTP...")}
-              style={styles.resendButton}
-            />
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header Row */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.iconBackground }]}>
+              <Feather name="arrow-left" size={24} color={colors.text} />
+            </TouchableOpacity>
           </View>
-        </GlassContainer>
+
+          {/* Titles */}
+          <View style={styles.titleContainer}>
+            <Animated.Text 
+              entering={FadeIn.duration(400)} 
+              style={[styles.title, { color: colors.text }]}
+            >
+              Verify Account
+            </Animated.Text>
+            <Animated.Text 
+              entering={FadeIn.duration(400).delay(100)} 
+              style={[styles.subtitle, { color: colors.mutedText }]}
+            >
+              Enter the 6-digit code sent to your email.
+            </Animated.Text>
+          </View>
+
+          <Animated.View entering={SlideInRight.springify().damping(20).stiffness(90)} style={styles.formContainer}>
+            <GlassContainer style={styles.inputCard}>
+              <Pressable style={styles.otpContainer} onPress={handleBoxPress} disabled={isLoading}>
+                {renderOtpBoxes()}
+              </Pressable>
+
+              <TextInput
+                ref={inputRef}
+                value={otp}
+                onChangeText={(text) => {
+                  if (text.length <= 6) setOtp(text.replace(/[^0-9]/g, ""));
+                }}
+                keyboardType="number-pad"
+                maxLength={6}
+                style={styles.hiddenInput}
+                editable={!isLoading}
+                autoFocus
+              />
+
+              {isLoading && (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 25 }} />
+              )}
+              {error && !isLoading && (
+                <Animated.Text entering={FadeIn} style={[styles.errorText, { color: colors.danger || 'red' }]}>
+                  {error}
+                </Animated.Text>
+              )}
+            </GlassContainer>
+            
+            <View style={styles.resendContainer}>
+              <Text style={[styles.resendText, { color: colors.mutedText }]}>Didn&apos;t receive code?</Text>
+              <TouchableOpacity onPress={() => console.log("Resending OTP...")}>
+                 <Text style={[styles.resendLink, { color: colors.primary }]}>Resend</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -90,61 +146,76 @@ export default function OTPScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    maxWidth: 400,
-    width: "100%",
-    alignSelf: "center",
   },
-  card: {
-    paddingVertical: 40,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 25,
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingBottom: 40,
+    maxWidth: 500,
+    alignSelf: "center",
+    width: "100%",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 35,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
     alignItems: "center",
   },
+  titleContainer: {
+    marginBottom: 35,
+    minHeight: 80,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#000",
-    textAlign: "center",
-    marginBottom: 8,
+    fontSize: 34,
+    fontWeight: "900",
+    marginBottom: 10,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 35,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  formContainer: {
+    width: "100%",
+  },
+  inputCard: {
+    padding: 25,
+    paddingVertical: 35,
+    borderRadius: 24,
+    alignItems: 'center',
+    width: '100%',
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
     width: "100%",
-    marginBottom: 30,
   },
   otpBox: {
     width: 45,
     height: 55,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   otpBoxFocused: {
-    borderColor: "#000",
     borderWidth: 2,
-  },
-  otpBoxFilled: {
-    borderColor: "#000",
+    transform: [{ scale: 1.05 }],
   },
   otpText: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#000",
   },
   hiddenInput: {
     position: "absolute",
@@ -152,24 +223,24 @@ const styles = StyleSheet.create({
     height: 1,
     opacity: 0,
   },
-  verifyButton: {
-    width: "100%",
-    marginTop: 10,
+  resendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    gap: 6,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  resendText: {
+    fontSize: 15,
   },
-  footer: {
-    marginTop: 35,
-    alignItems: "center",
-    width: "100%",
+  resendLink: {
+    fontSize: 15,
+    fontWeight: '700',
   },
-  footerText: {
-    color: "#333",
+  errorText: {
     fontSize: 14,
-    marginBottom: 8,
-  },
-  resendButton: {
-    width: "100%",
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 25,
   },
 });
