@@ -66,6 +66,7 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
       style={[styles.container, { backgroundColor: colors.background }]} 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      stickyHeaderIndices={[1]}
     >
       {/* Profile Card */}
       <View style={[styles.profileCard, isDesktop && styles.profileCardDesktop, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
@@ -84,7 +85,8 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
       </View>
 
       {/* Segmented Control */}
-      <View style={[styles.segmentContainer, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+      <View style={[styles.segmentWrapper, { backgroundColor: colors.background }]}>
+        <View style={[styles.segmentContainer, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
         <TouchableOpacity
           style={[styles.segmentButton, activeTab === "profile" && [styles.segmentButtonActive, { backgroundColor: colors.primary }]]}
           onPress={() => setActiveTab("profile")}
@@ -110,13 +112,15 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
           </Text>
         </TouchableOpacity>
       </View>
+      </View>
 
       {/* Tab Content */}
       <View style={styles.tabContent}>
         {activeTab === "profile" && (
           <>
-            <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary, marginBottom: 20 }]} onPress={onEdit}>
-              <Text style={[styles.updateButtonText, { color: colors.background }]}>Update Profile</Text>
+            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]} onPress={onEdit}>
+              <Ionicons name="pencil" size={20} color={colors.background} />
+              <Text style={[styles.createButtonText, { color: colors.background }]}>Update Profile</Text>
             </TouchableOpacity>
 
             <View style={[styles.skillsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
@@ -251,19 +255,6 @@ const styles = StyleSheet.create({
     color: "#999",
     fontWeight: "500",
   },
-  updateButton: {
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 12,
-    width: "100%",
-    maxWidth: 200,
-    alignItems: "center",
-    alignSelf: "flex-start",
-  },
-  updateButtonText: {
-    fontWeight: "700",
-    fontSize: 15,
-  },
   createButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -278,6 +269,10 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  segmentWrapper: {
+    paddingBottom: 10,
+    zIndex: 10,
   },
   segmentContainer: {
     flexDirection: "row",
