@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import ReviewSection from "./ReviewSection";
@@ -24,6 +24,27 @@ interface PublicProfileViewProps {
 
 export default function PublicProfileView({ isDesktop, profile, onBack, onChat }: PublicProfileViewProps) {
   const { colors } = useTheme();
+  const [isViewingAllReviews, setIsViewingAllReviews] = useState(false);
+
+  if (isViewingAllReviews) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+         <View style={[styles.allReviewsHeader, { borderBottomColor: colors.border }]}>
+            {isDesktop && (
+              <TouchableOpacity onPress={() => setIsViewingAllReviews(false)} style={styles.backButton}>
+                 <Ionicons name="arrow-back" size={24} color={colors.text} />
+              </TouchableOpacity>
+            )}
+            <Text style={[styles.allReviewsTitle, { color: colors.text }]}>
+               Reviews
+            </Text>
+         </View>
+         <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}>
+             <ReviewSection providerName={profile.name} hasCompletedService={profile.id === "1"} hideTitle={true} />
+         </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -91,7 +112,12 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
 
         {/* Reviews Section */}
         <View style={styles.section}>
-          <ReviewSection providerName={profile.name} hasCompletedService={profile.id === "1"} />
+          <ReviewSection 
+            providerName={profile.name} 
+            hasCompletedService={profile.id === "1"} 
+            limit={3}
+            onViewAll={() => setIsViewingAllReviews(true)}
+          />
         </View>
 
       </ScrollView>
@@ -109,6 +135,21 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 120,
+  },
+  allReviewsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    marginRight: 15,
+    padding: 5,
+  },
+  allReviewsTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   desktopContent: {
     maxWidth: 800,
