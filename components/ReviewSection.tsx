@@ -589,10 +589,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     marginBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.05)",
     elevation: 2,
   },
   formTitle: {

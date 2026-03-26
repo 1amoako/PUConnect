@@ -256,9 +256,7 @@ export default function FeedScreen() {
           isActive && showSpecialStyle && { 
             borderColor: colors.background, 
             borderWidth: 2,
-            shadowColor: colors.primary,
-            shadowOpacity: 0.8,
-            shadowRadius: 15,
+            boxShadow: `0px 0px 15px ${colors.primary}B3`, // roughly 0.7-0.8 opacity
             elevation: 20
           }
         ]}>
