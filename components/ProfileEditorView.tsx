@@ -136,7 +136,8 @@ export default function ProfileEditorView({ isVisible, isDesktop, mode, onBack, 
         skills, 
         contact,
         avatar,
-        isExpertActive: isExpertExpanded 
+        isExpertActive: isExpertExpanded,
+        status: (isExpertExpanded && !isAlreadyExpert) ? 'pending' : 'approved'
       };
       
       onSave?.(submission);

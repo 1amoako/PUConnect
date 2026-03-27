@@ -9,6 +9,7 @@ import {
     TouchableOpacity, 
     View,
     Image,
+    ActivityIndicator,
     Platform
 } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
@@ -33,11 +34,13 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
   const [price, setPrice] = useState(initialData?.price || "");
   const [image, setImage] = useState(initialData?.image || "");
   const [step, setStep] = useState(1);
-  const totalSteps = 3;
+  const [isLoading, setIsLoading] = useState(false);
+  const totalSteps = type === 'skill' ? 3 : 1;
 
   useEffect(() => {
     if (isVisible) {
       setStep(1);
+      setIsLoading(false);
       if (!initialData) {
         setTitle("");
         setDescription("");
@@ -65,19 +68,27 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
     else handleSave();
   };
 
-  const handleSave = () => {
-    onSave?.({
-      title,
-      description,
-      price,
-      image,
-      type
-    });
+  const handleSave = async () => {
+    setIsLoading(true);
+    // Simulate network delay
+    setTimeout(() => {
+      onSave?.({
+        title,
+        description,
+        price,
+        image,
+        type,
+        status: 'pending'
+      });
+      setIsLoading(false);
+    }, 1500);
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.indicatorContainer}>
-      {[1, 2, 3].map((s) => (
+  const renderStepIndicator = () => {
+    if (totalSteps === 1) return <View style={{ width: 40 }} />; // Maintain header balance
+    return (
+      <View style={styles.indicatorContainer}>
+        {[1, 2, 3].map((s) => (
         <View 
           key={s} 
           style={[
@@ -86,8 +97,9 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
           ]} 
         />
       ))}
-    </View>
-  );
+      </View>
+    );
+  };
 
   return (
     <Modal visible={isVisible} animationType="slide" transparent onRequestClose={onBack}>
@@ -106,13 +118,19 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {step === 1 && (
               <View style={styles.stepContainer}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>The Basics</Text>
-                <Text style={[styles.sectionDesc, { color: colors.mutedText }]}>Give your {type === 'skill' ? 'ad' : 'request'} a catchy title.</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {type === 'skill' ? 'The Basics' : 'Request Details'}
+                </Text>
+                <Text style={[styles.sectionDesc, { color: colors.mutedText }]}>
+                  {type === 'skill' 
+                    ? 'Give your ad a catchy title.' 
+                    : 'What service do you need help with?'}
+                </Text>
                 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.label, { color: colors.mutedText }]}>Title</Text>
                   <GlassTextInput 
-                    placeholder="e.g. Website Development" 
+                    placeholder={type === 'skill' ? "e.g. Website Development" : "e.g. Need help with React Native"} 
                     value={title} 
                     onChangeText={setTitle} 
                     style={styles.input}
@@ -121,22 +139,26 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
 
                 {type === 'request' && (
                   <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.mutedText }]}>Budget / Price</Text>
-                    <GlassTextInput 
-                      placeholder="e.g. $50/hr or Fixed $500" 
-                      value={price} 
-                      onChangeText={setPrice} 
-                      style={styles.input}
+                    <Text style={[styles.label, { color: colors.mutedText }]}>Description</Text>
+                    <TextInput
+                      style={[styles.textArea, { height: 260, backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                      placeholder="Explain what you need in detail..."
+                      placeholderTextColor={colors.mutedText}
+                      multiline
+                      numberOfLines={8}
+                      value={description}
+                      onChangeText={setDescription}
+                      textAlignVertical="top"
                     />
                   </View>
                 )}
               </View>
             )}
 
-            {step === 2 && (
+            {step === 2 && type === 'skill' && (
               <View style={styles.stepContainer}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Description</Text>
-                <Text style={[styles.sectionDesc, { color: colors.mutedText }]}>Explain what you {type === 'skill' ? 'offer' : 'need'} in detail.</Text>
+                <Text style={[styles.sectionDesc, { color: colors.mutedText }]}>Explain what you offer in detail.</Text>
                 
                 <TextInput
                   style={[styles.textArea, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
@@ -172,10 +194,16 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
 
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <GlassButton 
-              title={step === totalSteps ? (initialData ? "Save Changes" : "Publish Now") : "Next Step"} 
+              title={isLoading ? "" : (step === totalSteps 
+                ? (initialData ? "Save Changes" : (type === 'skill' ? "Publish Now" : "Post Request")) 
+                : "Next Step")
+              } 
               onPress={handleNext} 
               style={styles.actionBtn}
-            />
+              disabled={isLoading}
+            >
+              {isLoading && <ActivityIndicator color={colors.background} />}
+            </GlassButton>
           </View>
         </GlassContainer>
       </View>

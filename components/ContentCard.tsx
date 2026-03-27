@@ -11,6 +11,7 @@ export interface CardData {
   price?: string;
   image: string;
   description: string;
+  status?: "pending" | "approved" | "rejected";
 }
 
 export const SAMPLE_DATA: CardData[] = [
@@ -21,6 +22,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Sarah Jenkins",
     description: "I help early-stage startups build their first digital services with high-end minimal design.",
     image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "2",
@@ -29,7 +31,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Startup Inc",
     description: "Looking for an experienced dev to help finish our MVP. Budget flexible.",
     image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
-    price: "$50-$100/hr"
+    price: "$50-$100/hr",
+    status: 'approved'
   },
   {
     id: "3",
@@ -38,6 +41,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "David Chen",
     description: "React Native specialist available for building scalable mobile applications.",
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "4",
@@ -46,7 +50,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Sweet Treats",
     description: "Need a rustic logo for my new organic bakery. Willing to pay upfront.",
     image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80",
-    price: "$200"
+    price: "$200",
+    status: 'approved'
   },
   {
     id: "5",
@@ -55,6 +60,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Mia Wong",
     description: "I grow Instagram accounts from 0 to 10k followers using organic strategies.",
     image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "6",
@@ -63,7 +69,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "James Miller",
     description: "College student looking for someone to explain Data Science fundamentals.",
     image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80",
-    price: "$30/hr"
+    price: "$30/hr",
+    status: 'approved'
   },
   {
     id: "7",
@@ -72,6 +79,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Luigi Rossi",
     description: "Italian to English technical translation. 10 years experience in engineering docs.",
     image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "8",
@@ -80,7 +88,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "The Johnsons",
     description: "Looking for a candid photographer for a small garden wedding in June.",
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-    price: "$1500"
+    price: "$1500",
+    status: 'approved'
   },
   {
     id: "9",
@@ -89,6 +98,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Kevin Patel",
     description: "Get a comprehensive report on why your website isn't ranking on Google.",
     image: "https://images.unsplash.com/photo-1571721795195-a2cb2d33e00d?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "10",
@@ -97,7 +107,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Modern Living",
     description: "Need help choosing furniture and colors for a 2-bedroom apartment.",
     image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
-    price: "$100/session"
+    price: "$100/session",
+    status: 'approved'
   },
   {
     id: "11",
@@ -106,6 +117,7 @@ export const SAMPLE_DATA: CardData[] = [
     author: "Alex Rivera",
     description: "Penetration testing and vulnerability assessment for small businesses.",
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+    status: 'approved'
   },
   {
     id: "12",
@@ -114,7 +126,8 @@ export const SAMPLE_DATA: CardData[] = [
     author: "AppDev Team",
     description: "Need a 30-second animated video for our new fitness app. Assets provided.",
     image: "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80",
-    price: "$500"
+    price: "$500",
+    status: 'approved'
   },
 ];
 
@@ -143,15 +156,24 @@ export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit,
         }
       ]}
       onPress={onPress}
-      activeOpacity={0.9}
+      activeOpacity={data.status === 'pending' ? 1 : 0.9}
+      disabled={data.status === 'pending'}
     >
       {/* Cover Image Section */}
       <View style={styles.imageWrapper}>
         <Image 
           source={{ uri: data.image }} 
-          style={styles.coverImage}
+          style={[styles.coverImage, data.status === 'pending' && { opacity: 0.6, grayscale: 1 } as any]} 
           resizeMode="cover"
         />
+        {data.status === 'pending' && (
+          <View style={[styles.pendingOverlay, { backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+            <View style={[styles.pendingBadge, { backgroundColor: '#F59E0B' }]}>
+              <Ionicons name="time-outline" size={12} color="#fff" />
+              <Text style={styles.pendingBadgeText}>Pending Review</Text>
+            </View>
+          </View>
+        )}
         {!hideTag && (
           <View style={[styles.badgeOverlay, { backgroundColor: data.type === 'skill' ? colors.primary : colors.text }]}>
             <Text style={[styles.badgeText, { color: colors.background }]}>
@@ -248,6 +270,27 @@ const styles = StyleSheet.create({
   coverImage: {
     width: '100%',
     height: '100%',
+  },
+  pendingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    boxShadow: "0 4 15 rgba(0,0,0,0.3)",
+  },
+  pendingBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   badgeOverlay: {
     position: 'absolute',

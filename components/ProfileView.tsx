@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedScrollHandler, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming 
+} from "react-native-reanimated";
 import { useTheme } from "../context/ThemeContext";
 import ContentCard from "./ContentCard";
 
@@ -26,6 +33,26 @@ export default function ProfileView({
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"profile" | "skills" | "requests">("profile");
 
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const fabStyle = useAnimatedStyle(() => {
+    // Show FAB when scrolled past the profile card (~180px) AND not on the main profile tab
+    const isVisible = scrollY.value > 180 && activeTab !== "profile";
+    return {
+      opacity: withTiming(isVisible ? 1 : 0),
+      transform: [
+        { scale: withSpring(isVisible ? 1 : 0) },
+        { translateY: withSpring(isVisible ? 0 : 20) }
+      ],
+    };
+  });
+
   const initial = user.name.charAt(0).toUpperCase();
 
   // Temporary mock activities (will be moved later)
@@ -36,12 +63,18 @@ export default function ProfileView({
   ];
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]} 
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      stickyHeaderIndices={[1]}
-    >
+    <View style={styles.container}>
+      <Animated.ScrollView 
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        style={[styles.container, { backgroundColor: colors.background }]} 
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { paddingBottom: isDesktop ? 140 : 180 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[1]}
+      >
       {/* Profile Card */}
       <View style={[styles.profileCard, isDesktop && styles.profileCardDesktop, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <View style={styles.avatarContainer}>
@@ -76,6 +109,15 @@ export default function ProfileView({
               {user.expertStatus === 'approved' ? '⭐ Verified Expert' : user.expertStatus === 'pending' ? '⏳ Pending Review' : 'Community Member'}
             </Text>
           </View>
+
+          {user.expertStatus === 'pending' && (
+            <View style={[styles.pendingBanner, { backgroundColor: '#F59E0B' + '15', borderColor: '#F59E0B' + '40' }]}>
+              <Ionicons name="information-circle-outline" size={18} color="#F59E0B" />
+              <Text style={[styles.pendingBannerText, { color: '#F59E0B' }]}>
+                Your expert application is under review.
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -166,10 +208,10 @@ export default function ProfileView({
                   </TouchableOpacity>
                 </View>
                 <Text style={[styles.expertBio, { color: colors.text }]}>
-                  {user.expertProfile.description}
+                  {user.expertProfile?.description}
                 </Text>
                 <View style={styles.skillsTagList}>
-                  {user.expertProfile.skills.map((skill) => (
+                  {user.expertProfile?.skills?.map((skill) => (
                     <View key={skill} style={[styles.skillBadge, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
                       <Text style={[styles.skillBadgeText, { color: colors.text }]}>{skill}</Text>
                     </View>
@@ -283,7 +325,25 @@ export default function ProfileView({
           </View>
         )}
       </View>
-    </ScrollView>
+      </Animated.ScrollView>
+
+      {/* Dynamic Floating Action Button */}
+      <Animated.View 
+        style={[
+          styles.fabContainer, 
+          { backgroundColor: colors.text, boxShadow: `0 8 20 ${isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'}` },
+          fabStyle
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.fabButton}
+          onPress={activeTab === "skills" ? onCreateAd : onCreateRequest}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={30} color={colors.background} />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -295,10 +355,26 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 25,
     paddingTop: 20,
-    paddingBottom: 140,
     maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
+  },
+  fabContainer: {
+    position: "absolute",
+    bottom: 110, // Above bottom navbar
+    right: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  fabButton: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   profileCard: {
     borderRadius: 24,
@@ -330,6 +406,20 @@ const styles = StyleSheet.create({
   rolePillText: {
     fontSize: 12,
     fontWeight: "600",
+  },
+  pendingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  pendingBannerText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   profileCardDesktop: {
     flexDirection: "row",

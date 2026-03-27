@@ -16,9 +16,9 @@ export default function AdminDashboard({ isDesktop, onReviewAll, pendingApplicat
 
   const stats = [
     { id: "1", label: "Pending Verifications", value: (8 + pendingApplications.length).toString(), icon: "person-add-outline" },
-    { id: "2", label: "New Skill Submissions", value: "14", icon: "construct-outline" },
-    { id: "3", label: "Reported Skills", value: "2", icon: "flag-outline" },
-    { id: "4", label: "System Uptime", value: "99.9%", icon: "pulse-outline" },
+    { id: "2", label: "New Listings & Requests", value: "23", icon: "construct-outline" },
+    { id: "3", label: "Reported Content", value: "3", icon: "flag-outline" },
+    { id: "4", label: "System Health", value: "Optimal", icon: "pulse-outline" },
   ];
 
   const recentActivity = [
