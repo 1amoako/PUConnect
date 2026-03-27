@@ -359,7 +359,8 @@ export default function FeedScreen() {
                 handle: currentUser.handle,
                 description: currentUser.expertProfile?.description || currentUser.pendingExpertData?.description || '',
                 skills: currentUser.expertProfile?.skills || currentUser.pendingExpertData?.skills || [],
-                contact: '', // Mock handle
+                contact: currentUser.contact || '',
+                avatar: currentUser.avatar,
                 expertStatus: currentUser.expertStatus
               }}
               onSave={(data) => {
@@ -369,6 +370,7 @@ export default function FeedScreen() {
                     name: data.name,
                     handle: data.handle,
                     contact: data.contact,
+                    avatar: data.avatar,
                   };
 
                   if (data.isExpertActive) {

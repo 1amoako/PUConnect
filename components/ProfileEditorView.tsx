@@ -1,18 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
-import {
-    Animated,
-    Easing,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+import { 
+    Animated, 
+    Easing, 
+    Image, 
+    KeyboardAvoidingView, 
+    Modal, 
+    Platform, 
+    ScrollView, 
+    StyleSheet, 
+    Text, 
+    TextInput, 
+    TouchableOpacity, 
+    View 
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import { GlassContainer } from "./GlassContainer";
@@ -28,6 +30,7 @@ interface ProfileEditorViewProps {
     description: string;
     skills: string[];
     contact: string;
+    avatar?: string;
     expertStatus: 'none' | 'pending' | 'approved';
   };
 }
@@ -38,8 +41,23 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
   const [handle, setHandle] = useState(initialData?.handle || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [contact, setContact] = useState(initialData?.contact || "");
+  const [avatar, setAvatar] = useState(initialData?.avatar || "");
   const [skills, setSkills] = useState<string[]>(initialData?.skills || []);
   const [newSkill, setNewSkill] = useState("");
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
   
   const isAlreadyExpert = initialData?.expertStatus === 'approved' || initialData?.expertStatus === 'pending';
   const [isExpertExpanded, setIsExpertExpanded] = useState(isAlreadyExpert);
@@ -120,6 +138,7 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
         description, 
         skills, 
         contact,
+        avatar,
         isExpertActive: isExpertExpanded 
       };
       
@@ -228,13 +247,7 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          {!isDesktop && (
-            <TouchableOpacity onPress={onBack} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
-            </TouchableOpacity>
-          )}
           <Text style={[styles.title, { color: colors.text }]}>Edit Profile</Text>
-          <View style={{ width: 40 }} /> 
         </View>
 
         <GlassContainer style={[styles.modularSection, { borderColor: colors.border }]}>
@@ -248,6 +261,24 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
             </View>
           </View>
           
+          <View style={styles.avatarSection}>
+            <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+              {avatar ? (
+                <Image source={{ uri: avatar }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.avatarPlaceholderText, { color: colors.background }]}>
+                    {name ? name.charAt(0).toUpperCase() : "?"}
+                  </Text>
+                </View>
+              )}
+              <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
+                <Ionicons name="camera" size={16} color={colors.background} />
+              </View>
+            </TouchableOpacity>
+            <Text style={[styles.avatarHint, { color: colors.mutedText }]}>Tap to change photo</Text>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Full Name</Text>
             <GlassTextInput
@@ -317,7 +348,7 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
             <View style={styles.expertContent}>
               <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
-                  <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Expert Overview</Text>
+                  <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Profile Description</Text>
                   {!isAlreadyExpert && (
                     <TouchableOpacity onPress={() => setIsExpertExpanded(false)}>
                       <Text style={[styles.removeLink, { color: colors.danger }]}>Disable</Text>
@@ -529,6 +560,47 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 16,
     fontSize: 16,
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginBottom: 25,
+    marginTop: -5,
+  },
+  avatarContainer: {
+    position: "relative",
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarPlaceholderText: {
+    fontSize: 40,
+    fontWeight: "800",
+  },
+  editBadge: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "white",
+  },
+  avatarHint: {
+    fontSize: 13,
+    marginTop: 8,
+    fontWeight: "600",
   },
   upgradeToggleModular: {
     flexDirection: "row",
