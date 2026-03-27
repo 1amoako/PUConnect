@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   filtersContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     gap: 10,
   },
   filterPill: {
@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 25,
+    paddingTop: 20,
     paddingBottom: 140, // Space for bottom nav
     maxWidth: 1000,
     width: "100%",

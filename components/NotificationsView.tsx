@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   headerSection: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
     paddingVertical: 12,
   },
   searchBox: {
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   desktopContent: {
-    maxWidth: 800,
+    maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
   },

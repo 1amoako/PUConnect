@@ -296,6 +296,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#fff",
     height: "100%", // Ensure full height coverage over feed space
+    maxWidth: 1000,
+    alignSelf: "center",
+    width: "100%",
   },
   sidebar: {
     width: 320,
@@ -311,7 +314,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatListHeader: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
     paddingVertical: 12,
   },
   searchBox: {
@@ -338,7 +341,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 25,
   },
   chatItemActive: {
     backgroundColor: "#f0f0f0",
@@ -601,8 +604,8 @@ const styles = StyleSheet.create({
   inputBarContainer: {
     position: "absolute",
     bottom: 25,
-    left: 20,
-    right: 20,
+    left: 25,
+    right: 25,
     height: 60,
     backgroundColor: "#fff",
     flexDirection: "row",

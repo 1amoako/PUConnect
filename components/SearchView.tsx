@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     paddingVertical: 15,
     borderBottomWidth: 1,
   },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   categoriesScroll: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     gap: 12,
   },
   categoryPill: {
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     marginTop: 25,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
   },
   sectionHeader: {
     marginBottom: 15,

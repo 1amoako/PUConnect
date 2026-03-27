@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 25,
     paddingTop: 160, // Space for the pill-shaped floating banner + its top margin
     paddingBottom: 120,
   },
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     paddingBottom: 140, // Extra space for mobile bottom nav
   },
   desktopContent: {
-    maxWidth: 800,
+    maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
     paddingTop: 180,

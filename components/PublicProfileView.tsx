@@ -133,7 +133,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 25,
+    paddingTop: 20,
     paddingBottom: 120,
   },
   allReviewsHeader: {
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   desktopContent: {
-    maxWidth: 800,
+    maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
     paddingTop: 30,

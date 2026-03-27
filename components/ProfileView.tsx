@@ -293,9 +293,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   scrollContent: {
-    padding: 20,
+    paddingHorizontal: 25,
+    paddingTop: 20,
     paddingBottom: 140,
-    maxWidth: 800,
+    maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
   },

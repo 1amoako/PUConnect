@@ -125,7 +125,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 25,
+    paddingTop: 20,
     paddingBottom: 140,
   },
   desktopContent: {
