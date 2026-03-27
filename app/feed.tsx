@@ -163,7 +163,6 @@ export default function FeedScreen() {
     let title: React.ReactNode = "Your Feed";
     if (selectedProfile) title = selectedProfile.name;
     else if (isSearchActive) title = "Search";
-    else if (isProfileEditorActive) title = "Profile Editor";
     else if (isNotificationsActive) title = "Notifications";
     else if (isAdminReviewActive) title = "Review Center";
     else if (activeTab === "admin") title = "Admin Panel";
@@ -180,13 +179,12 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive || (isNotificationsActive && !isDesktop) || selectedProfile || (isAdminReviewActive && !isDesktop)) && !isDesktop) ? (
+        {((isInSettings || (isSearchActive && !isDesktop) || (isNotificationsActive && !isDesktop) || selectedProfile || (isAdminReviewActive && !isDesktop)) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
               if (selectedProfile) setSelectedProfile(null);
               else if (isSearchActive) setIsSearchActive(false);
-              else if (isProfileEditorActive) setIsProfileEditorActive(false);
               else if (isNotificationsActive) setIsNotificationsActive(false);
               else if (isAdminReviewActive) setIsAdminReviewActive(false);
               else if (activeTab === "settings") setActiveTab("home");
@@ -205,7 +203,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && !isSearchActive && !isProfileEditorActive && !isNotificationsActive && !selectedProfile && !isAdminReviewActive && activeTab !== "admin" && (
+        {!isInSettings && !isSearchActive && !isNotificationsActive && !selectedProfile && !isAdminReviewActive && activeTab !== "admin" && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (activeTab !== "profile" || !isDesktop) && (
@@ -247,9 +245,9 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive || isProfileEditorActive) && (
+        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
           <View style={styles.utilitySection}>
-            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive || isProfileEditorActive) && (
+            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
                 onPress={() => {
@@ -257,7 +255,6 @@ export default function FeedScreen() {
                   setIsNotificationsActive(false);
                   setSelectedProfile(null);
                   setIsAdminReviewActive(false);
-                  setIsProfileEditorActive(false);
                 }}
               >
                 <Ionicons name="close-outline" size={32} color={colors.text} />

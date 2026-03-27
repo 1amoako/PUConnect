@@ -299,10 +299,10 @@ export default function ProfileEditorView({ isVisible, isDesktop, mode, onBack, 
                   {(isExpertExpanded || mode === 'expert') && (
                     <Animated.View style={{ opacity: 1, marginTop: 15 }}>
                       <View style={styles.inputGroup}>
-                        <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Expert Bio</Text>
+                        <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Skill Bio</Text>
                         <TextInput
                           style={[styles.textArea, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
-                          placeholder="Tell us about your experience..."
+                          placeholder="Brief description of your skills..."
                           placeholderTextColor={colors.mutedText}
                           multiline
                           numberOfLines={4}
