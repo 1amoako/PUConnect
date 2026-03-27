@@ -640,8 +640,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 1,
     zIndex: 10,
-    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
-    elevation: 5,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.12)",
   },
   bannerHeader: {
     flexDirection: "row",

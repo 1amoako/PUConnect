@@ -494,8 +494,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 8,
     zIndex: 1000,
-    boxShadow: "0px 8px 25px rgba(0,0,0,0.15)",
-    elevation: 10,
+    boxShadow: "0 8 25 rgba(0,0,0,0.15)",
   },
   menuItem: {
     flexDirection: "row",
@@ -612,8 +611,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.05)",
     paddingHorizontal: 15,
-    boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.15)",
-    elevation: 10,
+    boxShadow: "0 8 25 rgba(0, 0, 0, 0.15)",
     zIndex: 20,
   },
   inputIcon: {

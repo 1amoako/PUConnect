@@ -131,8 +131,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth: 2,
     borderColor: "#000",
-    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.15)",
-    elevation: 8,
+    boxShadow: "0 6 15 rgba(0, 0, 0, 0.15)",
   },
   iconWrapper: {
     zIndex: 10,

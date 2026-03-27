@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
@@ -125,49 +125,102 @@ interface ContentCardProps {
   isOwner?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  hideTag?: boolean;
 }
 
-export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete }: ContentCardProps) {
-  const { colors } = useTheme();
+export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete, hideTag }: ContentCardProps) {
+  const { colors, isDark } = useTheme();
+  
   return (
     <TouchableOpacity 
-      style={[styles.card, isDesktop && styles.desktopCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+      style={[
+        styles.card, 
+        isDesktop && styles.desktopCard, 
+        { 
+          backgroundColor: colors.cardBackground, 
+          borderColor: colors.border,
+          boxShadow: isDark ? "0 4 20 rgba(0,0,0,0.3)" : "0 8 30 rgba(0,0,0,0.08)"
+        }
+      ]}
       onPress={onPress}
+      activeOpacity={0.9}
     >
-      <View style={styles.cardHeader}>
-        <View style={[styles.badge, { backgroundColor: data.type === 'skill' ? colors.primary : colors.iconBackground }]}>
-          <Text style={[styles.badgeText, { color: data.type === 'skill' ? colors.background : colors.text }]}>
-            {data.type === 'skill' ? 'SKILL' : 'REQUEST'}
-          </Text>
-        </View>
-        <Ionicons name="heart-outline" size={20} color={colors.text} />
+      {/* Cover Image Section */}
+      <View style={styles.imageWrapper}>
+        <Image 
+          source={{ uri: data.image }} 
+          style={styles.coverImage}
+          resizeMode="cover"
+        />
+        {!hideTag && (
+          <View style={[styles.badgeOverlay, { backgroundColor: data.type === 'skill' ? colors.primary : colors.text }]}>
+            <Text style={[styles.badgeText, { color: colors.background }]}>
+              {data.type === 'skill' ? 'SKILL AD' : 'SERVICE REQUEST'}
+            </Text>
+          </View>
+        )}
+        {data.price && (
+          <View style={[styles.priceTag, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.priceText, { color: colors.text }]}>{data.price}</Text>
+          </View>
+        )}
       </View>
       
       <View style={styles.cardContent}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>{data.title}</Text>
-        <Text style={[styles.cardAuthor, { color: colors.secondaryText }]}>by {data.author}</Text>
-        <Text style={[styles.cardDescription, { color: colors.mutedText }]} numberOfLines={2}>{data.description}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
+            {data.title}
+          </Text>
+          <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="heart-outline" size={20} color={colors.mutedText} />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.authorRow}>
+          <View style={[styles.miniAvatar, { backgroundColor: colors.iconBackground }]}>
+            <Text style={[styles.miniAvatarText, { color: colors.primary }]}>
+              {data.author.charAt(0)}
+            </Text>
+          </View>
+          <Text style={[styles.cardAuthor, { color: colors.secondaryText }]}>
+            {data.author}
+          </Text>
+        </View>
+
+        <Text style={[styles.cardDescription, { color: colors.mutedText }]} numberOfLines={2}>
+          {data.description}
+        </Text>
       </View>
 
-      <View style={styles.cardFooter}>
-        {data.price && <Text style={[styles.priceText, { color: colors.text }]}>{data.price}</Text>}
+      <View style={[styles.cardFooter, { borderTopColor: colors.border + '20' }]}>
         <View style={styles.footerActions}>
-          {isOwner && (
+          {isOwner ? (
+            <View style={styles.ownerActions}>
+              <TouchableOpacity 
+                style={[styles.miniDeleteBtn, { backgroundColor: colors.danger + '15' }]}
+                onPress={onDelete}
+              >
+                <Ionicons name="trash-outline" size={20} color={colors.danger} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.editBtn, { backgroundColor: colors.primary }]}
+                onPress={onEdit}
+              >
+                <Ionicons name="create-outline" size={18} color={colors.background} />
+                <Text style={[styles.editBtnText, { color: colors.background }]}>Edit Ad</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
             <TouchableOpacity 
-              style={[styles.deleteButton, { borderColor: colors.danger + '33' }]}
-              onPress={onDelete}
+              style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+              onPress={onPress}
             >
-              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              <Text style={[styles.primaryActionBtnText, { color: colors.background }]}>
+                View Details
+              </Text>
+              <Ionicons name="arrow-forward" size={18} color={colors.background} />
             </TouchableOpacity>
           )}
-          <TouchableOpacity 
-            style={[styles.viewButton, { backgroundColor: isOwner ? colors.text : colors.primary }]}
-            onPress={isOwner ? onEdit : undefined}
-          >
-            <Text style={[styles.viewButtonText, { color: colors.background }]}>
-              {isOwner ? "Edit" : "View"}
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -176,88 +229,142 @@ export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit,
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#eee",
-    padding: 16,
+    overflow: "hidden",
     width: "100%",
+    marginBottom: 4, // Space for shadow
   },
   desktopCard: {
     width: "48%",
-    minWidth: 300,
+    minWidth: 340,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+  imageWrapper: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    position: 'relative',
+    backgroundColor: '#f0f0f0',
   },
-  badge: {
-    backgroundColor: "#f0f0f0",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  badgeOverlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    boxShadow: "0 4 10 rgba(0,0,0,0.15)",
   },
   badgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#333",
+    letterSpacing: 0.5,
   },
-  cardContent: {
-    marginBottom: 15,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: 4,
-  },
-  cardAuthor: {
-    fontSize: 13,
-    color: "#666",
-    marginBottom: 8,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: "#444",
-    lineHeight: 20,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#f5f5f5",
-    paddingTop: 15,
+  priceTag: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    boxShadow: "0 4 10 rgba(0,0,0,0.1)",
   },
   priceText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "800",
-    color: "#000",
+  },
+  cardContent: {
+    padding: 20,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: "800",
     flex: 1,
+    marginRight: 10,
   },
-  viewButton: {
-    backgroundColor: "#000",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
   },
-  viewButtonText: {
-    color: "#fff",
-    fontSize: 13,
+  miniAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniAvatarText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  cardAuthor: {
+    fontSize: 14,
     fontWeight: "600",
+  },
+  cardDescription: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '400',
+  },
+  cardFooter: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
   },
   footerActions: {
     flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
+    gap: 12,
   },
-  deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  ownerActions: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  miniDeleteBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+    boxShadow: "0 4 12 rgba(0,0,0,0.1)",
+  },
+  editBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  primaryActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    borderRadius: 16,
+  },
+  primaryActionBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

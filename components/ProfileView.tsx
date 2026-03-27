@@ -14,11 +14,15 @@ interface ProfileViewProps {
   onDeleteRequest?: (id: string) => void;
   onCreateAd?: () => void;
   onCreateRequest?: () => void;
+  onEditAd?: (ad: any) => void;
+  onEditRequest?: (req: any) => void;
 }
 
 // Static constants removed
 
-export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDeleteRequest, onCreateAd, onCreateRequest }: ProfileViewProps) {
+export default function ProfileView({ 
+  isDesktop, user, onEdit, onDeleteAd, onDeleteRequest, onCreateAd, onCreateRequest, onEditAd, onEditRequest 
+}: ProfileViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"profile" | "skills" | "requests">("profile");
 
@@ -239,7 +243,8 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
                   data={data} 
                   isDesktop={isDesktop} 
                   isOwner={true} 
-                  onEdit={() => console.log('Edit', data.id)} 
+                  hideTag={true}
+                  onEdit={() => onEditAd?.(data)} 
                   onDelete={() => onDeleteAd?.(data.id)}
                 />
               ))}
@@ -266,7 +271,8 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
                   data={data} 
                   isDesktop={isDesktop} 
                   isOwner={true} 
-                  onEdit={() => console.log('Edit', data.id)} 
+                  hideTag={true}
+                  onEdit={() => onEditRequest?.(data)} 
                   onDelete={() => onDeleteRequest?.(data.id)}
                 />
               ))}
@@ -299,8 +305,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     marginBottom: 20,
-    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
-    elevation: 4,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.05)",
   },
   avatarBadge: {
     position: "absolute",
@@ -617,8 +622,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderWidth: 1,
     gap: 12,
-    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.05)",
-    elevation: 3,
+    boxShadow: "0 8 24 rgba(0, 0, 0, 0.05)",
   },
   infoRow: {
     flexDirection: 'row',

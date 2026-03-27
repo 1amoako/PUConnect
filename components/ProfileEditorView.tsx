@@ -384,11 +384,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 36,
     paddingHorizontal: 24,
     paddingTop: 24,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    boxShadow: '0 -4 10 rgba(0, 0, 0, 0.1)',
   },
   modalContentDesktop: {
     width: 600,

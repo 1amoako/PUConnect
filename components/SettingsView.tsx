@@ -206,8 +206,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eee",
     overflow: "hidden",
-    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.03)",
-    elevation: 2,
+    boxShadow: "0 4 20 rgba(0, 0, 0, 0.03)",
   },
   settingRow: {
     flexDirection: "row",

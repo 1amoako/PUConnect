@@ -1,5 +1,6 @@
 import AdminDashboard from "@/components/AdminDashboard";
 import AdminReviewView from "@/components/AdminReviewView";
+import AdEditorModal from "@/components/AdEditorModal";
 import NotificationsView from "@/components/NotificationsView";
 import PeopleView from "@/components/PeopleView";
 import ProfileEditorView from "@/components/ProfileEditorView";
@@ -86,6 +87,11 @@ export default function FeedScreen() {
   const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
+
+  // Ad Editor State
+  const [isAdEditorActive, setIsAdEditorActive] = useState(false);
+  const [adEditorType, setAdEditorType] = useState<'skill' | 'request'>('skill');
+  const [adToEdit, setAdToEdit] = useState<any>(null);
   const activeTabX = useSharedValue(0);
   const indicatorWidth = useSharedValue(0);
   const [tabLayouts, setTabLayouts] = useState<{[key: string]: {x: number, width: number}}>({});
@@ -125,6 +131,7 @@ export default function FeedScreen() {
     setIsNotificationsActive(false);
     setIsAdminReviewActive(false);
     setSelectedProfile(null);
+    setIsAdEditorActive(false);
   }, [activeTab]);
 
   const handleProfileClick = (profileId: string) => {
@@ -150,6 +157,35 @@ export default function FeedScreen() {
     setSelectedProfile(null);
     setDirectChatId(profileId);
     setActiveTab("chat");
+  };
+
+  const handleSaveAdOrRequest = (data: any) => {
+    const isEdit = !!adToEdit;
+    const newItem = {
+      ...data,
+      id: isEdit ? adToEdit.id : Math.random().toString(36).substr(2, 9),
+      author: currentUser.name,
+      image: data.image || (data.type === 'skill' 
+        ? "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=400&q=80" 
+        : "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=400&q=80")
+    };
+
+    setCurrentUser(prev => {
+      if (data.type === 'skill') {
+        const newAds = isEdit 
+          ? prev.ads.map(ad => ad.id === adToEdit.id ? newItem : ad)
+          : [newItem, ...prev.ads];
+        return { ...prev, ads: newAds };
+      } else {
+        const newReqs = isEdit 
+          ? prev.requests.map(req => req.id === adToEdit.id ? newItem : req)
+          : [newItem, ...prev.requests];
+        return { ...prev, requests: newReqs };
+      }
+    });
+
+    setIsAdEditorActive(false);
+    setAdToEdit(null);
   };
 
   const renderLogo = () => (
@@ -362,6 +398,7 @@ export default function FeedScreen() {
                           key={item.id} 
                           data={item} 
                           isDesktop={isDesktop} 
+                          hideTag={true}
                           onPress={() => handleProfileClick(item.id)}
                         />
                       ))}
@@ -454,27 +491,24 @@ export default function FeedScreen() {
                       }));
                     }}
                     onCreateAd={() => {
-                      const newAd = {
-                        id: Math.random().toString(36).substr(2, 9),
-                        type: 'skill',
-                        title: 'New Skill Ad',
-                        author: currentUser.name,
-                        description: 'Just added this new skill ad to my profile!',
-                        image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=400&q=80"
-                      };
-                      setCurrentUser(prev => ({ ...prev, ads: [newAd, ...prev.ads] }));
+                      setAdEditorType('skill');
+                      setAdToEdit(null);
+                      setIsAdEditorActive(true);
                     }}
                     onCreateRequest={() => {
-                      const newReq = {
-                        id: Math.random().toString(36).substr(2, 9),
-                        type: 'request',
-                        title: 'New Service Request',
-                        author: currentUser.name,
-                        description: 'Looking for assistance with a new project.',
-                        price: '$100',
-                        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=400&q=80"
-                      };
-                      setCurrentUser(prev => ({ ...prev, requests: [newReq, ...prev.requests] }));
+                      setAdEditorType('request');
+                      setAdToEdit(null);
+                      setIsAdEditorActive(true);
+                    }}
+                    onEditAd={(ad) => {
+                      setAdEditorType('skill');
+                      setAdToEdit(ad);
+                      setIsAdEditorActive(true);
+                    }}
+                    onEditRequest={(req) => {
+                      setAdEditorType('request');
+                      setAdToEdit(req);
+                      setIsAdEditorActive(true);
                     }}
                   />
                 )
@@ -551,6 +585,15 @@ export default function FeedScreen() {
             }}
           />
         </View>
+
+        <AdEditorModal
+          isVisible={isAdEditorActive}
+          isDesktop={isDesktop}
+          onBack={() => setIsAdEditorActive(false)}
+          onSave={handleSaveAdOrRequest}
+          type={adEditorType}
+          initialData={adToEdit}
+        />
       </View>
     </SafeAreaView>
   );
@@ -706,8 +749,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 1,
     zIndex: 10,
-    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
-    elevation: 5,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.12)",
   },
   bannerText: {
     fontSize: 16,
@@ -778,8 +820,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     paddingHorizontal: 10,
     paddingBottom: Platform.OS === "ios" ? 5 : 0,
-    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)",
-    elevation: 10,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.15)",
     overflow: "visible",
   },
   bottomNavContent: {
@@ -823,8 +864,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.25)",
-    elevation: 8,
+    boxShadow: "0 8 15 rgba(0, 0, 0, 0.25)",
     transform: [{ translateY: -15 }],
   },
 });

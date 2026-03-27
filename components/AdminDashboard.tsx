@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 15,
-    elevation: 2,
     width: "100%", // 1 column on mobile
   },
   statCardDesktop: {
@@ -199,7 +198,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 24,
     marginBottom: 30,
-    elevation: 3,
   },
   sectionHeader: {
     flexDirection: "row",
