@@ -7,19 +7,29 @@ import { GlassButton } from "./GlassButton";
 interface AdminDashboardProps {
   isDesktop: boolean;
   onReviewAll: () => void;
+  pendingApplications?: any[];
+  onApproveExpert?: (userId: string) => void;
 }
 
-export default function AdminDashboard({ isDesktop, onReviewAll }: AdminDashboardProps) {
-  const { colors } = useTheme();
+export default function AdminDashboard({ isDesktop, onReviewAll, pendingApplications = [], onApproveExpert }: AdminDashboardProps) {
+  const { colors, isDark } = useTheme();
 
   const stats = [
-    { id: "1", label: "Pending Verifications", value: "8", icon: "person-add-outline" },
+    { id: "1", label: "Pending Verifications", value: (8 + pendingApplications.length).toString(), icon: "person-add-outline" },
     { id: "2", label: "New Skill Submissions", value: "14", icon: "construct-outline" },
     { id: "3", label: "Reported Skills", value: "2", icon: "flag-outline" },
     { id: "4", label: "System Uptime", value: "99.9%", icon: "pulse-outline" },
   ];
 
   const recentActivity = [
+    ...pendingApplications.map(app => ({
+      id: app.id,
+      user: app.name,
+      action: "applied for Expert Status",
+      time: "Just now",
+      icon: "rocket-outline",
+      isPending: true
+    })),
     { id: "a1", user: "Jacob Zero", action: "submitted a new profile for verification", time: "10 mins ago", icon: "person-outline" },
     { id: "a2", user: "Sarah Jenkins", action: "added 'UI/UX Design' to their skills", time: "25 mins ago", icon: "construct-outline" },
     { id: "a3", user: "David Chen", action: "reported a suspicious profile", time: "1 hour ago", icon: "alert-circle-outline" },
@@ -80,7 +90,16 @@ export default function AdminDashboard({ isDesktop, onReviewAll }: AdminDashboar
               </Text>
               <Text style={[styles.activityTime, { color: colors.mutedText }]}>{activity.time}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.mutedText} />
+            {(activity as any).isPending ? (
+              <TouchableOpacity 
+                style={[styles.approveBadge, { backgroundColor: colors.primary }]}
+                onPress={() => onApproveExpert?.(activity.id)}
+              >
+                <Text style={[styles.approveText, { color: isDark ? '#000' : '#fff' }]}>Approve</Text>
+              </TouchableOpacity>
+            ) : (
+              <Ionicons name="chevron-forward" size={18} color={colors.mutedText} />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -249,6 +268,15 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 15,
+    fontWeight: "700",
+  },
+  approveBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  approveText: {
+    fontSize: 12,
     fontWeight: "700",
   },
 });

@@ -29,7 +29,28 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
 import { useTheme } from "../context/ThemeContext";
-import ContentCard, { SAMPLE_DATA } from "@/components/ContentCard";
+import ContentCard, { CardData, SAMPLE_DATA } from "@/components/ContentCard";
+
+export type ExpertStatus = 'none' | 'pending' | 'approved';
+
+export interface UserProfile {
+  name: string;
+  handle: string;
+  joined: string;
+  avatar?: string;
+  expertStatus: ExpertStatus;
+  expertProfile?: {
+    description: string;
+    skills: string[];
+  };
+  pendingExpertData?: {
+    description: string;
+    skills: string[];
+  };
+  contact?: string;
+  ads: any[];
+  requests: any[];
+}
 
 export default function FeedScreen() {
 
@@ -41,10 +62,26 @@ export default function FeedScreen() {
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
   const [feedTab, setFeedTab] = useState<"skill" | "request">("skill");
+  
+  // Phase 1: Central User State (UU by default)
+  const [currentUser, setCurrentUser] = useState<UserProfile>({
+    name: "Jacob Zero",
+    handle: "@jacobzero",
+    joined: "March 2024",
+    expertStatus: 'none',
+    ads: [
+      { id: "sa1", type: "skill", title: "Professional Tutoring", author: "Jacob Zero", description: "I teach Python and React Native for beginners. 5 years experience.", image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=400&q=80" },
+    ],
+    requests: [
+      { id: "sr1", type: "request", title: "Need help with a logo", author: "Jacob Zero", description: "Looking for a minimal logo for a startup. Budget $200.", price: "$200", image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80" },
+    ]
+  });
+
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
   const [isSettingsActive, setIsSettingsActive] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
+  // editorMode removed for modular editor
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
   const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
@@ -210,9 +247,9 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
+        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive || isProfileEditorActive) && (
           <View style={styles.utilitySection}>
-            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
+            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive || isProfileEditorActive) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
                 onPress={() => {
@@ -220,6 +257,7 @@ export default function FeedScreen() {
                   setIsNotificationsActive(false);
                   setSelectedProfile(null);
                   setIsAdminReviewActive(false);
+                  setIsProfileEditorActive(false);
                 }}
               >
                 <Ionicons name="close-outline" size={32} color={colors.text} />
@@ -313,7 +351,50 @@ export default function FeedScreen() {
           ) : isNotificationsActive ? (
             <NotificationsView isDesktop={isDesktop} />
           ) : isProfileEditorActive ? (
-            <ProfileEditorView isDesktop={isDesktop} onBack={() => setIsProfileEditorActive(false)} />
+            <ProfileEditorView 
+              isDesktop={isDesktop} 
+              onBack={() => setIsProfileEditorActive(false)} 
+              initialData={{
+                name: currentUser.name,
+                handle: currentUser.handle,
+                description: currentUser.expertProfile?.description || currentUser.pendingExpertData?.description || '',
+                skills: currentUser.expertProfile?.skills || currentUser.pendingExpertData?.skills || [],
+                contact: '', // Mock handle
+                expertStatus: currentUser.expertStatus
+              }}
+              onSave={(data) => {
+                setCurrentUser(prev => {
+                  const updated = {
+                    ...prev,
+                    name: data.name,
+                    handle: data.handle,
+                    contact: data.contact,
+                  };
+
+                  if (data.isExpertActive) {
+                    if (prev.expertStatus === 'none') {
+                      updated.expertStatus = 'pending';
+                      updated.pendingExpertData = {
+                        description: data.description,
+                        skills: data.skills,
+                      };
+                    } else if (prev.expertStatus === 'pending') {
+                      updated.pendingExpertData = {
+                        description: data.description,
+                        skills: data.skills,
+                      };
+                    } else if (prev.expertStatus === 'approved') {
+                      updated.expertProfile = {
+                        description: data.description,
+                        skills: data.skills,
+                      };
+                    }
+                  }
+
+                  return updated;
+                });
+              }}
+            />
           ) : (
             <>
               {activeTab === "home" && (
@@ -382,6 +463,18 @@ export default function FeedScreen() {
                 <AdminDashboard 
                   isDesktop={isDesktop} 
                   onReviewAll={() => setIsAdminReviewActive(true)}
+                  pendingApplications={currentUser.expertStatus === 'pending' ? [{ id: 'curr', name: currentUser.name }] : []}
+                  onApproveExpert={() => {
+                    setCurrentUser(prev => ({
+                      ...prev,
+                      expertStatus: 'approved',
+                      expertProfile: prev.pendingExpertData ?? {
+                        description: 'Expert profile approved.',
+                        skills: []
+                      },
+                      pendingExpertData: undefined,
+                    }));
+                  }}
                 />
               )}
 
@@ -389,7 +482,48 @@ export default function FeedScreen() {
                 isSettingsActive ? (
                   <SettingsView isDesktop={isDesktop} onBack={() => setIsSettingsActive(false)} />
                 ) : (
-                  <ProfileView isDesktop={isDesktop} onEdit={() => setIsProfileEditorActive(true)} />
+                  <ProfileView 
+                    isDesktop={isDesktop} 
+                    user={currentUser}
+                    onEdit={() => {
+                      setIsProfileEditorActive(true);
+                    }} 
+                    onDeleteAd={(id) => {
+                      setCurrentUser(prev => ({
+                        ...prev,
+                        ads: prev.ads.filter(ad => ad.id !== id)
+                      }));
+                    }}
+                    onDeleteRequest={(id) => {
+                      setCurrentUser(prev => ({
+                        ...prev,
+                        requests: prev.requests.filter(req => req.id !== id)
+                      }));
+                    }}
+                    onCreateAd={() => {
+                      const newAd = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'skill',
+                        title: 'New Skill Ad',
+                        author: currentUser.name,
+                        description: 'Just added this new skill ad to my profile!',
+                        image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=400&q=80"
+                      };
+                      setCurrentUser(prev => ({ ...prev, ads: [newAd, ...prev.ads] }));
+                    }}
+                    onCreateRequest={() => {
+                      const newReq = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'request',
+                        title: 'New Service Request',
+                        author: currentUser.name,
+                        description: 'Looking for assistance with a new project.',
+                        price: '$100',
+                        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=400&q=80"
+                      };
+                      setCurrentUser(prev => ({ ...prev, requests: [newReq, ...prev.requests] }));
+                    }}
+                  />
                 )
               )}
 

@@ -124,9 +124,10 @@ interface ContentCardProps {
   onPress?: () => void;
   isOwner?: boolean;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit }: ContentCardProps) {
+export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete }: ContentCardProps) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity 
@@ -150,14 +151,24 @@ export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit 
 
       <View style={styles.cardFooter}>
         {data.price && <Text style={[styles.priceText, { color: colors.text }]}>{data.price}</Text>}
-        <TouchableOpacity 
-          style={[styles.viewButton, { backgroundColor: isOwner ? colors.text : colors.primary }]}
-          onPress={isOwner ? onEdit : undefined}
-        >
-          <Text style={[styles.viewButtonText, { color: colors.background }]}>
-            {isOwner ? "Edit" : "View"}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.footerActions}>
+          {isOwner && (
+            <TouchableOpacity 
+              style={[styles.deleteButton, { borderColor: colors.danger + '33' }]}
+              onPress={onDelete}
+            >
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={[styles.viewButton, { backgroundColor: isOwner ? colors.text : colors.primary }]}
+            onPress={isOwner ? onEdit : undefined}
+          >
+            <Text style={[styles.viewButtonText, { color: colors.background }]}>
+              {isOwner ? "Edit" : "View"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -235,5 +246,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  footerActions: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

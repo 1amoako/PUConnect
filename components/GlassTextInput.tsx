@@ -5,11 +5,12 @@ import { useTheme } from '../context/ThemeContext';
 
 export interface GlassTextInputProps extends TextInputProps {
     isPassword?: boolean;
+    containerStyle?: any;
 }
 
 export function GlassTextInput(props: GlassTextInputProps) {
     const { colors } = useTheme();
-    const { isPassword, secureTextEntry, style, ...restProps } = props;
+    const { isPassword, secureTextEntry, style, containerStyle, ...restProps } = props;
     const [isSecure, setIsSecure] = useState(true);
 
     const toggleSecureEntry = () => {
@@ -17,12 +18,12 @@ export function GlassTextInput(props: GlassTextInputProps) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
             <TextInput
                 style={[styles.input, { 
                     color: colors.text, 
                     backgroundColor: colors.cardBackground, 
-                    borderColor: colors.primary 
+                    borderColor: colors.border, // Use border color instead of primary for a more subtle look
                 }, style]}
                 placeholderTextColor={colors.mutedText}
                 secureTextEntry={isPassword ? isSecure : secureTextEntry}
@@ -48,7 +49,6 @@ export function GlassTextInput(props: GlassTextInputProps) {
 const styles = StyleSheet.create({
     container: {
         width: '100%',
-        marginVertical: 10,
         position: 'relative',
         justifyContent: 'center',
     },

@@ -2,64 +2,34 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
-import ContentCard, { CardData } from "./ContentCard";
+import ContentCard from "./ContentCard";
+
+import { UserProfile } from "../app/feed";
 
 interface ProfileViewProps {
   isDesktop: boolean;
+  user: UserProfile;
   onEdit: () => void;
+  onDeleteAd?: (id: string) => void;
+  onDeleteRequest?: (id: string) => void;
+  onCreateAd?: () => void;
+  onCreateRequest?: () => void;
 }
 
-const MY_ADS: CardData[] = [
-  {
-    id: "m1",
-    type: "skill",
-    title: "Senior React Native Consulting",
-    author: "Jacob Zero",
-    description: "I offer architecture reviews and consulting for your React Native projects.",
-    image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
-    price: "$120/hr"
-  },
-  {
-    id: "m2",
-    type: "skill",
-    title: "UI/UX App Redesign",
-    author: "Jacob Zero",
-    description: "Complete overhaul of your mobile app's user experience.",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-    price: "$800"
-  }
-];
+// Static constants removed
 
-const MY_REQUESTS: CardData[] = [
-  {
-    id: "r1",
-    type: "request",
-    title: "Need Logo Animation",
-    author: "Jacob Zero",
-    description: "Looking for an After Effects wizard to animate our new startup logo.",
-    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
-    price: "$150"
-  }
-];
-
-export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
+export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDeleteRequest, onCreateAd, onCreateRequest }: ProfileViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"profile" | "skills" | "requests">("profile");
 
-  // Mock user data
-  const user = {
-    name: "Jacob Zero",
-    handle: "@jacobzero",
-    joined: "March 2024",
-    skills: ["React Native", "TypeScript", "UI/UX Design", "Next.js", "Node.js"],
-    activities: [
-      { id: "1", type: "skill", icon: "code-slash-outline", text: "Added Next.js to skills", time: "2 hours ago" },
-      { id: "2", type: "connection", icon: "people-outline", text: "Connected with Alice Cooper", time: "1 day ago" },
-      { id: "3", type: "system", icon: "rocket-outline", text: "Joined PUConnect", time: "3 days ago" },
-    ]
-  };
-
   const initial = user.name.charAt(0).toUpperCase();
+
+  // Temporary mock activities (will be moved later)
+  const activities = [
+    { id: "1", type: "skill", icon: "code-slash-outline", text: "Added Next.js to skills", time: "2 hours ago" },
+    { id: "2", type: "connection", icon: "people-outline", text: "Connected with Alice Cooper", time: "1 day ago" },
+    { id: "3", type: "system", icon: "rocket-outline", text: "Joined PUConnect", time: "3 days ago" },
+  ];
 
   return (
     <ScrollView 
@@ -74,14 +44,35 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             <Text style={[styles.avatarText, { color: colors.background }]}>{initial}</Text>
           </View>
+          {/* Expert Status Badge */}
+          {user.expertStatus === 'approved' && (
+            <View style={[styles.avatarBadge, { backgroundColor: colors.primary }]}>
+              <Ionicons name="star" size={10} color={isDark ? '#000' : '#fff'} />
+            </View>
+          )}
+          {user.expertStatus === 'pending' && (
+            <View style={[styles.avatarBadge, { backgroundColor: '#F59E0B' }]}>
+              <Ionicons name="time-outline" size={10} color="#fff" />
+            </View>
+          )}
         </View>
         
         <View style={styles.userInfo}>
           <Text style={[styles.userName, { color: colors.text }]}>{user.name}</Text>
           <Text style={[styles.userHandle, { color: colors.mutedText }]}>{user.handle}</Text>
           <Text style={[styles.userJoined, { color: colors.mutedText }]}>Joined {user.joined}</Text>
+          {/* Role Pill */}
+          <View style={[styles.rolePill, { 
+            backgroundColor: user.expertStatus === 'approved' ? colors.primary + '1A' : colors.iconBackground,
+            borderColor: user.expertStatus === 'approved' ? colors.primary : colors.border
+          }]}>
+            <Text style={[styles.rolePillText, { 
+              color: user.expertStatus === 'approved' ? colors.primary : colors.mutedText 
+            }]}>
+              {user.expertStatus === 'approved' ? '⭐ Verified Expert' : user.expertStatus === 'pending' ? '⏳ Pending Review' : 'Community Member'}
+            </Text>
+          </View>
         </View>
-
       </View>
 
       {/* Segmented Control */}
@@ -118,52 +109,92 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
       <View style={styles.tabContent}>
         {activeTab === "profile" && (
           <>
-            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]} onPress={onEdit}>
-              <Ionicons name="pencil" size={20} color={colors.background} />
-              <Text style={[styles.createButtonText, { color: colors.background }]}>Update Profile</Text>
-            </TouchableOpacity>
-
-            <View style={[styles.skillsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Skills</Text>
-              <View style={styles.skillsContainer}>
-                {user.skills.map((skill, index) => (
-                  <View key={index} style={[styles.skillTag, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
-                    <Text style={[styles.skillText, { color: colors.secondaryText }]}>{skill}</Text>
+            {user.expertStatus === 'approved' && user.expertProfile ? (
+              <View style={[styles.expertCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary + '33' }]}>
+                <View style={styles.expertHeader}>
+                  <View style={[styles.expertBadge, { backgroundColor: colors.primary }]}>
+                    <Ionicons name="star" size={12} color={isDark ? '#000' : '#fff'} />
+                    <Text style={[styles.expertBadgeText, { color: isDark ? '#000' : '#fff' }]}>Verified Expert</Text>
                   </View>
-                ))}
+                  <TouchableOpacity onPress={onEdit}>
+                    <Text style={[styles.editLink, { color: colors.primary }]}>Edit Expert Profile</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.expertBio, { color: colors.text }]}>
+                  {user.expertProfile.description}
+                </Text>
+                <View style={styles.skillsTagList}>
+                  {user.expertProfile.skills.map((skill) => (
+                    <View key={skill} style={[styles.skillBadge, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+                      <Text style={[styles.skillBadgeText, { color: colors.text }]}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
+            ) : user.expertStatus === 'pending' ? (
+              <View style={[styles.statusCard, { backgroundColor: colors.iconBackground, borderColor: colors.primary + '44' }]}>
+                <Ionicons name="time-outline" size={32} color={colors.primary} />
+                <Text style={[styles.statusTitle, { color: colors.text }]}>Review in Progress</Text>
+                <Text style={[styles.statusDescription, { color: colors.mutedText }]}>
+                  Your expert profile application is currently being reviewed by our team. You'll be notified once it's active.
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.upgradeCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
+                <View style={[styles.upgradeIcon, { backgroundColor: colors.primary + '1A' }]}>
+                  <Ionicons name="rocket-outline" size={32} color={colors.primary} />
+                </View>
+                <Text style={[styles.upgradeTitle, { color: colors.text }]}>Become an Expert</Text>
+                <Text style={[styles.upgradeDescription, { color: colors.mutedText }]}>
+                  Upgrade your profile to offer services, post skill ads, and get discovered by the community.
+                </Text>
+                <TouchableOpacity style={[styles.upgradeButton, { backgroundColor: colors.primary }]} onPress={onEdit}>
+                  <Text style={[styles.upgradeButtonText, { color: isDark ? '#000' : '#fff' }]}>Build Skill Profile</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Identity & Activity</Text>
             </View>
 
             <View style={[styles.activityCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Activity</Text>
-              <View style={styles.activityList}>
-                {user.activities.map((activity) => (
-                  <View key={activity.id} style={styles.activityItem}>
-                    <View style={[styles.activityIconContainer, { backgroundColor: colors.iconBackground }]}>
-                      <Ionicons name={activity.icon as any} size={18} color={colors.text} />
-                    </View>
-                    <View style={styles.activityTextContainer}>
-                      <Text style={[styles.activityText, { color: colors.text }]}>{activity.text}</Text>
-                      <Text style={[styles.activityTime, { color: colors.mutedText }]}>{activity.time}</Text>
-                    </View>
+              {activities.map((item, index) => (
+                <View key={item.id} style={[styles.activityItem, index < activities.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
+                  <View style={[styles.activityIconContainer, { backgroundColor: colors.iconBackground }]}>
+                    <Ionicons name={item.icon as any} size={18} color={colors.text} />
                   </View>
-                ))}
-              </View>
+                  <View style={styles.activityTextContainer}>
+                    <Text style={[styles.activityText, { color: colors.text }]}>{item.text}</Text>
+                    <Text style={[styles.activityTime, { color: colors.mutedText }]}>{item.time}</Text>
+                  </View>
+                </View>
+              ))}
             </View>
           </>
         )}
 
         {activeTab === "skills" && (
           <View>
-            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}>
+            <TouchableOpacity 
+              style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}
+              onPress={onCreateAd}
+            >
               <Ionicons name="add" size={20} color={colors.background} />
               <Text style={[styles.createButtonText, { color: colors.background }]}>Create New Ad</Text>
             </TouchableOpacity>
             <View style={styles.cardsGrid}>
-              {MY_ADS.map(data => (
-                <ContentCard key={data.id} data={data} isDesktop={isDesktop} isOwner={true} onEdit={() => console.log('Edit', data.id)} />
+              {user.ads.map(data => (
+                <ContentCard 
+                  key={data.id} 
+                  data={data} 
+                  isDesktop={isDesktop} 
+                  isOwner={true} 
+                  onEdit={() => console.log('Edit', data.id)} 
+                  onDelete={() => onDeleteAd?.(data.id)}
+                />
               ))}
-              {MY_ADS.length === 0 && (
+              {user.ads.length === 0 && (
                 <Text style={[styles.emptyText, { color: colors.mutedText }]}>No ads offered yet.</Text>
               )}
             </View>
@@ -172,15 +203,25 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
 
         {activeTab === "requests" && (
           <View>
-            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}>
+            <TouchableOpacity 
+              style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}
+              onPress={onCreateRequest}
+            >
               <Ionicons name="add" size={20} color={colors.background} />
               <Text style={[styles.createButtonText, { color: colors.background }]}>Create New Request</Text>
             </TouchableOpacity>
             <View style={styles.cardsGrid}>
-               {MY_REQUESTS.map(data => (
-                <ContentCard key={data.id} data={data} isDesktop={isDesktop} isOwner={true} onEdit={() => console.log('Edit', data.id)} />
+               {user.requests.map(data => (
+                <ContentCard 
+                  key={data.id} 
+                  data={data} 
+                  isDesktop={isDesktop} 
+                  isOwner={true} 
+                  onEdit={() => console.log('Edit', data.id)} 
+                  onDelete={() => onDeleteRequest?.(data.id)}
+                />
               ))}
-              {MY_REQUESTS.length === 0 && (
+              {user.requests.length === 0 && (
                 <Text style={[styles.emptyText, { color: colors.mutedText }]}>No service requests yet.</Text>
               )}
             </View>
@@ -204,15 +245,36 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   profileCard: {
-    backgroundColor: "#fff",
     borderRadius: 24,
     padding: 25,
     borderWidth: 1,
-    borderColor: "#eee",
     alignItems: "center",
     marginBottom: 20,
     boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
     elevation: 4,
+  },
+  avatarBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  rolePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  rolePillText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   profileCardDesktop: {
     flexDirection: "row",
@@ -221,12 +283,12 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 15,
+    position: "relative",
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -321,12 +383,123 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "800",
     color: "#000",
-    marginBottom: 20,
+    marginBottom: 15,
     textTransform: "uppercase",
     letterSpacing: 1,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  expertCard: {
+    padding: 20,
+    borderRadius: 24,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  expertHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  expertBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 5,
+  },
+  expertBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  editLink: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  expertBio: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 15,
+  },
+  skillsTagList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  skillBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  skillBadgeText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  statusCard: {
+    padding: 30,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  statusTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  statusDescription: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  upgradeCard: {
+    padding: 30,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderStyle: "dotted",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  upgradeIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  upgradeTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  upgradeDescription: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 25,
+  },
+  upgradeButton: {
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 15,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
   },
   skillsContainer: {
     flexDirection: "row",
