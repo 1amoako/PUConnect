@@ -55,12 +55,15 @@ interface ChatViewProps {
   isDesktop: boolean;
   onActiveChatChange?: (isActive: boolean) => void;
   initialActiveChat?: string | null;
+  initialContext?: any | null; // Ad Context
 }
 
-export default function ChatView({ isDesktop, onActiveChatChange, initialActiveChat = null }: ChatViewProps) {
+export default function ChatView({ isDesktop, onActiveChatChange, initialActiveChat = null, initialContext = null }: ChatViewProps) {
   const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = React.useState<string | null>(initialActiveChat);
+  const [activeContext, setActiveContext] = useState<any | null>(initialContext);
+  const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
@@ -76,12 +79,18 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
     if (initialActiveChat) {
       handleChatSelect(initialActiveChat);
     }
-  }, [initialActiveChat, handleChatSelect]);
+    if (initialContext) {
+      setActiveContext(initialContext);
+      setInputText(`Hi, I'm interested in your ${initialContext.type === 'skill' ? 'service' : 'request'}: "${initialContext.title}"\n`);
+    }
+  }, [initialActiveChat, initialContext, handleChatSelect]);
 
   // Reset messages when switching chats to prevent state spillage
   React.useEffect(() => {
     setMessages(SAMPLE_MESSAGES);
     setIsHeaderMenuVisible(false); // Close menu when switching chats
+    // Only clear context if we actually completely leave the chat view?
+    // Actually, keep the context tied to the initiated chat
   }, [activeChat]);
 
   const renderChatItem = (chat: ChatItem) => {
@@ -244,20 +253,63 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
         {/* Input Bar */}
         <>
           <LinearGradient
-            colors={isDark ? ['transparent', colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)']}
-            style={styles.inputTranslucentBackdrop}
+            colors={isDark ? ['transparent', colors.background, colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)', 'rgba(255,255,255,1)']}
+            style={[styles.inputTranslucentBackdrop, activeContext && { height: 160 }]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.2 }}
           />
-          <View style={[styles.inputBarContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            <TouchableOpacity style={styles.inputIcon}>
-               <Ionicons name="attach-outline" size={26} color={colors.mutedText} />
-            </TouchableOpacity>
-            <TextInput
-              style={[styles.chatInput, { color: colors.text }]}
-              placeholder="Message"
-              placeholderTextColor={colors.mutedText}
-            />
+
+          <View style={[styles.inputWrapper, { bottom: 25 }]}>
+            {activeContext && (
+              <View style={[styles.contextBanner, { backgroundColor: isDark ? 'rgba(40,40,40,0.95)' : 'rgba(245,245,245,0.95)', borderColor: colors.border }]}>
+                 <View style={styles.contextBannerInner}>
+                   <Ionicons name="document-text" size={16} color={colors.primary} />
+                   <Text style={[styles.contextBannerText, { color: colors.text }]} numberOfLines={1}>
+                     Replying to: {activeContext.title}
+                   </Text>
+                 </View>
+                 <TouchableOpacity 
+                   onPress={() => {
+                     setActiveContext(null);
+                     setInputText(""); // Also clear the prefilled text
+                   }} 
+                   style={styles.contextCloseBtn}
+                 >
+                    <Ionicons name="close-circle" size={18} color={colors.mutedText} />
+                 </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={[styles.inputBarContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <TouchableOpacity style={styles.inputIcon}>
+                 <Ionicons name="attach-outline" size={26} color={colors.mutedText} />
+              </TouchableOpacity>
+              <TextInput
+                style={[styles.chatInput, { color: colors.text }]}
+                placeholder="Message"
+                placeholderTextColor={colors.mutedText}
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+              />
+              {inputText.trim().length > 0 && (
+                <TouchableOpacity 
+                  style={[styles.sendButton, { backgroundColor: colors.primary }]}
+                  onPress={() => {
+                    setMessages(prev => [...prev, {
+                      id: Math.random().toString(),
+                      text: inputText.trim(),
+                      time: "Just now",
+                      isSentByMe: true
+                    }]);
+                    setInputText("");
+                    setActiveContext(null); // Clear context after initial message
+                  }}
+                >
+                  <Ionicons name="send" size={16} color={colors.background} style={{ marginLeft: 2 }} />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </>
         
@@ -601,11 +653,42 @@ const styles = StyleSheet.create({
     height: 120, 
     zIndex: 10,
   },
-  inputBarContainer: {
+  inputWrapper: {
     position: "absolute",
-    bottom: 25,
-    left: 25,
-    right: 25,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+  },
+  contextBanner: {
+    marginHorizontal: 25,
+    marginBottom: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    boxShadow: "0 8 20 rgba(0,0,0,0.08)",
+  },
+  contextBannerInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  contextBannerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  contextCloseBtn: {
+    padding: 2,
+    marginLeft: 10,
+  },
+  inputBarContainer: {
+    marginHorizontal: 25,
     height: 60,
     backgroundColor: "#fff",
     flexDirection: "row",
@@ -615,7 +698,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.05)",
     paddingHorizontal: 15,
     boxShadow: "0 8 25 rgba(0, 0, 0, 0.15)",
-    zIndex: 20,
   },
   inputIcon: {
     padding: 8,
@@ -626,5 +708,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     color: "#000",
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });

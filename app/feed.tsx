@@ -87,6 +87,7 @@ export default function FeedScreen() {
   const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
+  const [chatActivityContext, setChatActivityContext] = useState<CardData | null>(null);
 
   // Ad Editor State
   const [isAdEditorActive, setIsAdEditorActive] = useState(false);
@@ -134,7 +135,14 @@ export default function FeedScreen() {
     setIsAdEditorActive(false);
   }, [activeTab]);
 
-  const handleProfileClick = (profileId: string) => {
+  const handleProfileClick = (item: string | CardData) => {
+    const profileId = typeof item === 'string' ? item : item.id;
+    if (typeof item !== 'string') {
+      setChatActivityContext(item);
+    } else {
+      setChatActivityContext(null);
+    }
+
     // In a real app, you'd fetch the profile data here. 
     // For now, we'll mock it based on the person clicked.
     const mockProfile: PublicProfileData = {
@@ -219,7 +227,10 @@ export default function FeedScreen() {
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
-              if (selectedProfile) setSelectedProfile(null);
+              if (selectedProfile) {
+                setSelectedProfile(null);
+                setChatActivityContext(null);
+              }
               else if (isSearchActive) setIsSearchActive(false);
               else if (isNotificationsActive) setIsNotificationsActive(false);
               else if (isAdminReviewActive) setIsAdminReviewActive(false);
@@ -431,7 +442,7 @@ export default function FeedScreen() {
                           data={item} 
                           isDesktop={isDesktop} 
                           hideTag={true}
-                          onPress={() => handleProfileClick(item.id)}
+                          onPress={() => handleProfileClick(item)}
                         />
                       ))}
                     </View>
@@ -444,6 +455,7 @@ export default function FeedScreen() {
                   isDesktop={isDesktop} 
                   onActiveChatChange={setIsMobileChatActive} 
                   initialActiveChat={directChatId}
+                  initialContext={chatActivityContext}
                 />
               )}
 
