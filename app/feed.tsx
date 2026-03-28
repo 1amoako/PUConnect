@@ -389,9 +389,41 @@ export default function FeedScreen() {
                 <View style={styles.feedWrapper}>
                   <ScrollView 
                     style={styles.feedScroll}
-                    contentContainerStyle={[styles.feedContainer, { paddingTop: 165, paddingBottom: 140 + insets.bottom }]}
+                    contentContainerStyle={[styles.feedContainer, { paddingBottom: 140 + insets.bottom }]}
                     showsVerticalScrollIndicator={false}
+                    stickyHeaderIndices={[1]}
                   >
+                    {/* Hero Message (Scrolls away) */}
+                    <View style={[styles.heroContainer, { backgroundColor: isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)', borderColor: colors.border }]}>
+                      <Text style={[styles.bannerText, { color: colors.text }]}>
+                        Find expert help or profitable gigs around you!
+                      </Text>
+                    </View>
+
+                    {/* Sticky Tabs (Locks to top) */}
+                    <View style={[styles.stickyTabWrapper, { backgroundColor: 'transparent' }]}>
+                      <View style={[styles.stickyTabContainer, { backgroundColor: isDark ? 'rgba(30,30,30,0.85)' : 'rgba(255,255,255,0.85)', borderColor: colors.border }]}>
+                        <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
+                          <TouchableOpacity
+                            style={[styles.tabButton, feedTab === "skill" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                            onPress={() => setFeedTab("skill")}
+                          >
+                            <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "skill" && [styles.tabTextActive, { color: colors.background }]]}>
+                              Find Experts
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.tabButton, feedTab === "request" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                            onPress={() => setFeedTab("request")}
+                          >
+                            <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "request" && [styles.tabTextActive, { color: colors.background }]]}>
+                              Find Gigs
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+
                     <View style={styles.cardsGrid}>
                       {SAMPLE_DATA.filter(item => item.type === feedTab).map((item) => (
                         <ContentCard 
@@ -404,31 +436,6 @@ export default function FeedScreen() {
                       ))}
                     </View>
                   </ScrollView>
-
-                  {/* Floating Tab Banner (Matches PeopleView) */}
-                  <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)', borderColor: colors.border }]}>
-                    <Text style={[styles.bannerText, { color: colors.text }]}>
-                      Find expert help or profitable gigs around you!
-                    </Text>
-                    <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
-                      <TouchableOpacity
-                        style={[styles.tabButton, feedTab === "skill" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
-                        onPress={() => setFeedTab("skill")}
-                      >
-                        <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "skill" && [styles.tabTextActive, { color: colors.background }]]}>
-                          Find Experts
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.tabButton, feedTab === "request" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
-                        onPress={() => setFeedTab("request")}
-                      >
-                        <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "request" && [styles.tabTextActive, { color: colors.background }]]}>
-                          Find Gigs
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
                 </View>
               )}
 
@@ -737,9 +744,7 @@ const styles = StyleSheet.create({
   feedWrapper: {
     flex: 1,
   },
-  bannerContainer: {
-    position: "absolute",
-    top: 15,
+  heroContainer: {
     width: "92%",
     maxWidth: 960,
     alignSelf: "center",
@@ -748,14 +753,31 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderRadius: 30,
     borderWidth: 1,
+    marginTop: 15,
+    marginBottom: 8,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.08)",
+  },
+  stickyTabWrapper: {
     zIndex: 10,
-    boxShadow: "0 10 30 rgba(0, 0, 0, 0.12)",
+    paddingBottom: 25,
+  },
+  stickyTabContainer: {
+    width: "92%",
+    maxWidth: 960,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 15,
+    borderRadius: 30,
+    borderWidth: 1,
+    boxShadow: "0 15 40 rgba(0, 0, 0, 0.12)",
   },
   bannerText: {
     fontSize: 16,
     fontWeight: "600",
     lineHeight: 22,
-    marginBottom: 15,
+    marginBottom: 0,
+    textAlign: "center",
   },
   tabSwitcher: {
     flexDirection: "row",

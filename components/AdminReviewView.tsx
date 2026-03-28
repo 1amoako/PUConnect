@@ -21,58 +21,25 @@ const MOCK_VERIFICATIONS = [
     status: "Pending", 
     time: "10m ago",
     email: "sarah.j@example.com",
-    bio: "Passionate UI/UX designer with 5 years of experience in mobile app design.",
-    skills: ["Figma", "Adobe XD", "User Research", "Prototyping"],
-    location: "Accra, Ghana",
+    bio: "Passionate UI/UX designer with 5 years experience.",
+    skills: ["Figma", "Research"],
+    location: "Accra",
     joinedDate: "2024-01-15"
   },
-  { 
-    id: "v2", 
-    name: "David Chen", 
-    type: "New Account", 
-    status: "In Review", 
-    time: "25m ago",
-    email: "david.c@example.com",
-    bio: "Full-stack developer looking to contribute to innovative projects.",
-    skills: ["React Native", "Node.js", "TypeScript", "PostgreSQL"],
-    location: "Kumasi, Ghana",
-    joinedDate: "2024-03-10"
-  },
-  { 
-    id: "v3", 
-    name: "Alex Rivera", 
-    type: "Skill Verification", 
-    status: "Pending", 
-    time: "1h ago",
-    email: "alex.r@example.com",
-    bio: "Expert in plumbing and household repairs.",
-    skills: ["Plumbing", "Electrical", "Carpentry"],
-    location: "Accra, Ghana",
-    joinedDate: "2023-11-20"
-  },
+  { id: "v2", name: "David Chen", type: "New Account", status: "In Review", time: "25m ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
+  { id: "v3", name: "Alex Rivera", type: "Skill Verification", status: "Pending", time: "1h ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
+  { id: "v4", name: "John Mensah", type: "Expert Status", status: "Pending", time: "2h ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
+  { id: "v5", name: "Amara Okeke", type: "New Account", status: "Pending", time: "3h ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
+  { id: "v6", name: "Kwame Boateng", type: "Profile Update", status: "Pending", time: "4h ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
+  { id: "v7", name: "Naa Ayeley", type: "Expert Status", status: "Pending", time: "5h ago", email: "", bio: "", skills: [], location: "", joinedDate: "" },
 ];
 
 const MOCK_REPORTS = [
-  { 
-    id: "r1", 
-    user: "John Doe", 
-    reason: "Inappropriate content", 
-    reporter: "Sarah J.", 
-    time: "2h ago",
-    description: "The user posted content that violates our community guidelines regarding professional conduct.",
-    evidence: "Chat log #88291",
-    priority: "High"
-  },
-  { 
-    id: "r2", 
-    user: "Unknown User", 
-    reason: "Spam behavior", 
-    reporter: "System", 
-    time: "5h ago",
-    description: "Automated detection flagged this account for sending multiple identical messages to 50+ users.",
-    evidence: "System Flag ID: 9928",
-    priority: "Medium"
-  },
+  { id: "r1", user: "John Doe", reason: "Inappropriate content", reporter: "Sarah J.", time: "2h ago", description: "", evidence: "", priority: "High" },
+  { id: "r2", user: "Unknown", reason: "Spam behavior", reporter: "System", time: "5h ago", description: "", evidence: "", priority: "Medium" },
+  { id: "r3", user: "Bad Actor", reason: "Scam", reporter: "Alice C.", time: "8h ago", description: "", evidence: "", priority: "High" },
+  { id: "r4", user: "Rude User", reason: "Harassment", reporter: "Mark T.", time: "1d ago", description: "", evidence: "", priority: "High" },
+  { id: "r5", user: "Bot Account", reason: "Spam", reporter: "System", time: "2d ago", description: "", evidence: "", priority: "Low" },
 ];
 
 const MOCK_FEEDBACK = [
@@ -605,7 +572,6 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {renderTabHeader()}
       <ScrollView 
         style={styles.scroll} 
         contentContainerStyle={[
@@ -614,7 +580,42 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
           !isDesktop && styles.mobileContent
         ]}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[1]}
       >
+        {/* Banner Hero */}
+        <View style={[styles.heroContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: colors.border }]}>
+          <Text style={[styles.bannerText, { color: colors.text }]}>
+            Quality Control & Moderation
+          </Text>
+        </View>
+
+        {/* Sticky Tabs */}
+        <View style={styles.stickyTabWrapper}>
+          <View style={[styles.stickyTabContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: colors.border }]}>
+            <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
+              {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
+                const isActive = activeTab === tab;
+                const labels = {
+                  verifications: "Queue",
+                  reports: "Reports",
+                  feedback: "Feedback"
+                };
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                    onPress={() => handleTabChange(tab)}
+                  >
+                    <Text style={[styles.tabText, { color: isActive ? colors.background : colors.mutedText }]}>
+                      {labels[tab]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
         {activeTab === "verifications" && renderVerifications()}
         {activeTab === "reports" && renderReports()}
         {activeTab === "feedback" && renderFeedback()}
@@ -628,9 +629,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  bannerContainer: {
-    position: "absolute",
-    top: 15,
+  heroContainer: {
     width: "92%",
     maxWidth: 960,
     alignSelf: "center",
@@ -639,8 +638,25 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderRadius: 30,
     borderWidth: 1,
+    marginTop: 15,
+    marginBottom: 8,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.08)",
+  },
+  stickyTabWrapper: {
     zIndex: 10,
-    boxShadow: "0 10 30 rgba(0, 0, 0, 0.12)",
+    backgroundColor: 'transparent',
+    paddingBottom: 25,
+  },
+  stickyTabContainer: {
+    width: "92%",
+    maxWidth: 960,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 15,
+    borderRadius: 30,
+    borderWidth: 1,
+    boxShadow: "0 15 40 rgba(0, 0, 0, 0.12)",
   },
   bannerHeader: {
     flexDirection: "row",
@@ -653,6 +669,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 22,
     textAlign: "center",
+    marginBottom: 0,
   },
   tabSwitcher: {
     flexDirection: "row",
@@ -680,17 +697,17 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 25,
-    paddingTop: 160, // Space for the pill-shaped floating banner + its top margin
+    paddingTop: 0, 
     paddingBottom: 120,
   },
   mobileContent: {
-    paddingBottom: 140, // Extra space for mobile bottom nav
+    paddingBottom: 140, 
   },
   desktopContent: {
     maxWidth: 1000,
     alignSelf: "center",
     width: "100%",
-    paddingTop: 180,
+    paddingTop: 0,
   },
   listContainer: {
     gap: 20,
