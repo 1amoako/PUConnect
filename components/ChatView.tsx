@@ -1,8 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from "../context/ThemeContext";
+
+export interface Attachment {
+  id: string;
+  type: 'image' | 'document';
+  uri: string;
+  name?: string;
+  mimeType?: string;
+}
 
 interface ChatItem {
   id: string;
@@ -19,6 +29,7 @@ interface Message {
   isSentByMe: boolean;
   isSystem?: boolean;
   type?: 'text' | 'completion_request';
+  attachments?: Attachment[];
 }
 
 const SAMPLE_CHATS: ChatItem[] = [
@@ -66,6 +77,69 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
+  const [isAttachmentMenuVisible, setIsAttachmentMenuVisible] = useState(false);
+  const [queuedAttachments, setQueuedAttachments] = useState<Attachment[]>([]);
+
+  const handlePickDocuments = async () => {
+    setIsAttachmentMenuVisible(false);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: true,
+        type: '*/*',
+      });
+      if (!result.canceled && result.assets) {
+        const newAttachments: Attachment[] = result.assets.map(asset => ({
+          id: Math.random().toString(),
+          type: 'document',
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType,
+        }));
+        setQueuedAttachments(prev => [...prev, ...newAttachments]);
+      }
+    } catch (e) {
+      console.log('Document picker Error', e);
+    }
+  };
+
+  const handlePickImages = async (useCamera: boolean) => {
+    setIsAttachmentMenuVisible(false);
+    
+    if (useCamera) {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Camera permissions are required to take photos.');
+        return;
+      }
+    }
+
+    try {
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
+        quality: 0.8,
+      };
+
+      const result = useCamera 
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync({ ...options, allowsMultipleSelection: true, selectionLimit: 5 });
+
+      if (!result.canceled && result.assets) {
+        const newAttachments: Attachment[] = result.assets.map(asset => ({
+          id: Math.random().toString(),
+          type: 'image',
+          uri: asset.uri,
+          name: asset.fileName || 'Image',
+        }));
+        setQueuedAttachments(prev => [...prev, ...newAttachments]);
+      }
+    } catch (e) {
+      console.log('Image picker Error', e);
+    }
+  };
+
+  const removeQueuedAttachment = (id: string) => {
+    setQueuedAttachments(prev => prev.filter(a => a.id !== id));
+  };
 
   const handleChatSelect = React.useCallback((chatId: string | null) => {
     setActiveChat(chatId);
@@ -230,14 +304,34 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                   styles.messageBubble,
                   msg.isSentByMe 
                     ? [styles.messageBubbleSent, { backgroundColor: colors.primary }] 
-                    : [styles.messageBubbleReceived, { backgroundColor: colors.iconBackground, borderColor: colors.border }]
+                    : [styles.messageBubbleReceived, { backgroundColor: colors.iconBackground, borderColor: colors.border }],
+                  !msg.text && msg.attachments ? { paddingHorizontal: 8, paddingVertical: 8 } : {}
                 ]}>
-                  <Text style={[
-                    styles.messageText,
-                    msg.isSentByMe ? { color: colors.background } : { color: colors.text }
-                  ]}>
-                    {msg.text}
-                  </Text>
+                  {msg.attachments && msg.attachments.length > 0 && (
+                    <View style={styles.messageAttachmentsGrid}>
+                      {msg.attachments.map(att => (
+                        <View key={att.id} style={styles.messageAttachmentWrapper}>
+                          {att.type === 'image' ? (
+                            <Image source={{ uri: att.uri }} style={[styles.messageImage, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }]} />
+                          ) : (
+                            <View style={[styles.messageDocument, { backgroundColor: msg.isSentByMe ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)' }]}>
+                              <Ionicons name="document-text" size={32} color={msg.isSentByMe ? '#fff' : colors.primary} />
+                              <Text style={[styles.messageDocumentText, { color: msg.isSentByMe ? '#fff' : colors.text }]} numberOfLines={1}>{att.name}</Text>
+                            </View>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {msg.text.length > 0 && (
+                    <Text style={[
+                      styles.messageText,
+                      msg.isSentByMe ? { color: colors.background } : { color: colors.text },
+                      msg.attachments && msg.attachments.length > 0 ? { marginTop: 4 } : {}
+                    ]}>
+                      {msg.text}
+                    </Text>
+                  )}
                   <Text style={[
                     styles.messageTime,
                     msg.isSentByMe ? { color: colors.background, opacity: 0.7 } : { color: colors.mutedText }
@@ -254,12 +348,35 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
         <>
           <LinearGradient
             colors={isDark ? ['transparent', colors.background, colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)', 'rgba(255,255,255,1)']}
-            style={[styles.inputTranslucentBackdrop, activeContext && { height: 160 }]}
+            style={[styles.inputTranslucentBackdrop, (activeContext || queuedAttachments.length > 0) && { height: queuedAttachments.length > 0 ? 220 : 160 }]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.2 }}
           />
 
           <View style={[styles.inputWrapper, { bottom: 25 }]}>
+            {queuedAttachments.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.queuedAttachmentsArea}>
+                {queuedAttachments.map(att => (
+                  <View key={att.id} style={styles.queuedAttachmentItem}>
+                    {att.type === 'image' ? (
+                      <Image source={{ uri: att.uri }} style={styles.queuedImage} />
+                    ) : (
+                      <View style={[styles.queuedDocument, { backgroundColor: isDark ? '#333' : '#f5f5f5' }]}>
+                        <Ionicons name="document-text" size={24} color={colors.primary} />
+                        <Text style={[styles.queuedDocumentText, { color: colors.text }]} numberOfLines={1}>{att.name}</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity 
+                      style={styles.removeAttachmentBtn} 
+                      onPress={() => removeQueuedAttachment(att.id)}
+                    >
+                      <Ionicons name="close-circle" size={24} color={"#ef4444"} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
             {activeContext && (
               <View style={[styles.contextBanner, { backgroundColor: isDark ? 'rgba(40,40,40,0.95)' : 'rgba(245,245,245,0.95)', borderColor: colors.border }]}>
                  <View style={styles.contextBannerInner}>
@@ -280,8 +397,31 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
               </View>
             )}
 
+            {isAttachmentMenuVisible && (
+              <View style={[styles.attachmentMenu, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => handlePickImages(true)}>
+                  <View style={[styles.attachmentMenuIconBox, { backgroundColor: colors.primary + '15' }]}>
+                    <Ionicons name="camera" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.attachmentMenuText, { color: colors.text }]}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => handlePickImages(false)}>
+                  <View style={[styles.attachmentMenuIconBox, { backgroundColor: colors.primary + '15' }]}>
+                    <Ionicons name="images" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.attachmentMenuText, { color: colors.text }]}>Photo & Video Library</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.attachmentMenuItem} onPress={handlePickDocuments}>
+                  <View style={[styles.attachmentMenuIconBox, { backgroundColor: colors.primary + '15' }]}>
+                    <Ionicons name="document" size={20} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.attachmentMenuText, { color: colors.text }]}>Document</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={[styles.inputBarContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
-              <TouchableOpacity style={styles.inputIcon}>
+              <TouchableOpacity style={styles.inputIcon} onPress={() => setIsAttachmentMenuVisible(!isAttachmentMenuVisible)}>
                  <Ionicons name="attach-outline" size={26} color={colors.mutedText} />
               </TouchableOpacity>
               <TextInput
@@ -292,7 +432,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                 onChangeText={setInputText}
                 multiline
               />
-              {inputText.trim().length > 0 && (
+              {(inputText.trim().length > 0 || queuedAttachments.length > 0) && (
                 <TouchableOpacity 
                   style={[styles.sendButton, { backgroundColor: colors.primary }]}
                   onPress={() => {
@@ -300,10 +440,13 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                       id: Math.random().toString(),
                       text: inputText.trim(),
                       time: "Just now",
-                      isSentByMe: true
+                      isSentByMe: true,
+                      attachments: queuedAttachments.length > 0 ? queuedAttachments : undefined
                     }]);
                     setInputText("");
                     setActiveContext(null); // Clear context after initial message
+                    setQueuedAttachments([]);
+                    setIsAttachmentMenuVisible(false);
                   }}
                 >
                   <Ionicons name="send" size={16} color={colors.background} style={{ marginLeft: 2 }} />
@@ -716,5 +859,109 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  queuedAttachmentsArea: {
+    paddingHorizontal: 25,
+    marginBottom: 10,
+    flexDirection: 'row',
+  },
+  queuedAttachmentItem: {
+    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  queuedImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    resizeMode: 'cover',
+  },
+  queuedDocument: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 4,
+  },
+  queuedDocumentText: {
+    fontSize: 8,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  removeAttachmentBtn: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 2,
+  },
+  attachmentMenu: {
+    position: 'absolute',
+    bottom: 75,
+    left: 25,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 8,
+    width: 220,
+    boxShadow: "0 10 30 rgba(0,0,0,0.15)",
+    zIndex: 50,
+  },
+  attachmentMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    gap: 12,
+    borderRadius: 12,
+  },
+  attachmentMenuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  attachmentMenuText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  messageAttachmentsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 4,
+  },
+  messageAttachmentWrapper: {
+    width: '100%',
+    aspectRatio: 4/3,
+    maxWidth: 240,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  messageImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderWidth: 1,
+    borderRadius: 14,
+  },
+  messageDocument: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+  },
+  messageDocumentText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
