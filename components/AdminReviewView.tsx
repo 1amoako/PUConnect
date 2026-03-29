@@ -128,36 +128,6 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     setActionStatus("idle");
   };
 
-  const renderTabHeader = () => (
-    <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
-      <View style={styles.bannerHeader}>
-        <Text style={[styles.bannerText, { color: colors.text }]}>
-          Categorized Issues
-        </Text>
-      </View>
-      <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
-        {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
-          const isActive = activeTab === tab;
-          const labels = {
-            verifications: "Queue",
-            reports: "Reports",
-            feedback: "Feedback"
-          };
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
-              onPress={() => handleTabChange(tab)}
-            >
-              <Text style={[styles.tabText, { color: isActive ? colors.background : colors.mutedText }]}>
-                {labels[tab]}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
 
   const renderVerifications = () => (
     <View style={styles.listContainer}>

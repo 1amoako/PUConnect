@@ -202,9 +202,9 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   };
 
   const chatListContent = (
-    <View style={[styles.chatListContainer, { backgroundColor: colors.background, borderRightColor: colors.border }]}>
+    <View style={[styles.chatListContainer, { backgroundColor: isDesktop ? 'transparent' : colors.background, borderRightColor: isDesktop ? (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)') : colors.border }]}>
       <View style={styles.chatListHeader}>
-        <View style={[styles.searchBox, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+        <View style={[styles.searchBox, { backgroundColor: isDesktop ? (isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)') : colors.iconBackground, borderColor: colors.border }]}>
           <Ionicons name="search-outline" size={18} color={colors.mutedText} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
@@ -230,8 +230,8 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   );
 
   const emptyStateContent = (
-    <View style={[styles.emptyStateContainer, { backgroundColor: colors.background }]}>
-      <View style={[styles.emptyStatePill, { backgroundColor: colors.iconBackground }]}>
+    <View style={[styles.emptyStateContainer, { backgroundColor: isDesktop ? 'transparent' : colors.background }]}>
+      <View style={[styles.emptyStatePill, { backgroundColor: isDesktop ? (isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)') : colors.iconBackground }]}>
         <Text style={[styles.emptyStateText, { color: colors.mutedText }]}>Select a chat to start messaging</Text>
       </View>
     </View>
@@ -242,9 +242,9 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
     if (!chat) return emptyStateContent;
 
     return (
-      <View style={[styles.activeChatContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.activeChatContainer, { backgroundColor: isDesktop ? 'transparent' : colors.background }]}>
         {/* Chat Header */}
-        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: colors.border, backgroundColor: colors.background, zIndex: 1000 }]}>
+        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: isDesktop ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : colors.border, backgroundColor: isDesktop ? 'transparent' : colors.background, zIndex: 1000 }]}>
           {!isDesktop && (
             <View style={styles.backButtonContainer}>
               <TouchableOpacity onPress={() => handleChatSelect(null)} style={[styles.backButtonCircle, { backgroundColor: colors.iconBackground }]}>
@@ -347,13 +347,13 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
         {/* Input Bar */}
         <>
           <LinearGradient
-            colors={isDark ? ['transparent', colors.background, colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)', 'rgba(255,255,255,1)']}
+            colors={isDesktop ? ['transparent', 'transparent', 'transparent'] : (isDark ? ['transparent', colors.background, colors.background] : ['transparent', 'rgba(255, 255, 255, 0.9)', 'rgba(255,255,255,1)'])}
             style={[styles.inputTranslucentBackdrop, (activeContext || queuedAttachments.length > 0) && { height: queuedAttachments.length > 0 ? 220 : 160 }]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.2 }}
           />
 
-          <View style={[styles.inputWrapper, { bottom: 25 }]}>
+          <View style={[styles.inputWrapper, { bottom: isDesktop ? 25 : 0, paddingHorizontal: isDesktop ? 25 : 0 }]}>
             {queuedAttachments.length > 0 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.queuedAttachmentsArea}>
                 {queuedAttachments.map(att => (
@@ -420,13 +420,28 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
               </View>
             )}
 
-            <View style={[styles.inputBarContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <View style={[
+              styles.inputBarContainer, 
+              isDesktop && {
+                borderRadius: 25,
+                borderWidth: 1,
+                borderTopWidth: 1,
+                boxShadow: "0 10 30 rgba(0,0,0,0.1)",
+                backdropFilter: "blur(20px)" as any,
+                paddingVertical: 0,
+                alignItems: 'center',
+              },
+              { 
+                backgroundColor: isDesktop ? (isDark ? 'rgba(40,40,40,0.85)' : 'rgba(255,255,255,0.85)') : colors.background, 
+                borderColor: isDesktop ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)') : colors.border 
+              }
+            ]}>
               <TouchableOpacity style={styles.inputIcon} onPress={() => setIsAttachmentMenuVisible(!isAttachmentMenuVisible)}>
                  <Ionicons name="attach-outline" size={26} color={colors.mutedText} />
               </TouchableOpacity>
               <TextInput
-                style={[styles.chatInput, { color: colors.text }]}
-                placeholder="Message"
+                style={[styles.chatInput, { color: colors.text, backgroundColor: 'transparent', paddingHorizontal: 10, marginRight: 10 }]}
+                placeholder="Type a Message"
                 placeholderTextColor={colors.mutedText}
                 value={inputText}
                 onChangeText={setInputText}
@@ -470,12 +485,20 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   }
 
   return (
-    <View style={[styles.containerDesktop, { backgroundColor: colors.background }]}>
-      <View style={[styles.sidebar, { borderRightColor: colors.border, backgroundColor: colors.background }]}>
-        {chatListContent}
-      </View>
-      <View style={[styles.mainArea, { backgroundColor: isDark ? colors.background : "#fcfcfc" }]}>
-        {activeChat ? renderActiveChat() : emptyStateContent}
+    <View style={[styles.desktopWrapper, { backgroundColor: colors.background }]}>
+      <View style={[
+        styles.containerDesktop, 
+        { 
+          backgroundColor: isDark ? 'rgba(30, 30, 30, 0.65)' : 'rgba(255, 255, 255, 0.85)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.3)'
+        }
+      ]}>
+        <View style={[styles.sidebar, { borderRightColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)' }]}>
+          {chatListContent}
+        </View>
+        <View style={[styles.mainArea, { backgroundColor: "transparent" }]}>
+          {activeChat ? renderActiveChat() : emptyStateContent}
+        </View>
       </View>
     </View>
   );
@@ -486,24 +509,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  desktopWrapper: {
+    flex: 1,
+    paddingVertical: 25,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+  },
   containerDesktop: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "#fff",
-    height: "100%", // Ensure full height coverage over feed space
-    maxWidth: 1000,
+    maxWidth: 1200,
     alignSelf: "center",
     width: "100%",
+    borderRadius: 30,
+    borderWidth: 1,
+    overflow: "hidden",
+    boxShadow: "0 15 50 rgba(0, 0, 0, 0.15)",
+    backdropFilter: "blur(20px)" as any,
   },
   sidebar: {
     width: 320,
     borderRightWidth: 1,
-    borderColor: "#eee",
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
   },
   mainArea: {
     flex: 1,
-    backgroundColor: "#fcfcfc",
+    backgroundColor: "transparent",
   },
   chatListContainer: {
     flex: 1,
@@ -847,10 +878,12 @@ const styles = StyleSheet.create({
   },
   chatInput: {
     flex: 1,
-    height: "100%",
     paddingHorizontal: 10,
+    paddingTop: 20,
+    paddingBottom: 2,
     fontSize: 16,
     color: "#000",
+    textAlignVertical: "center",
   },
   sendButton: {
     width: 36,
