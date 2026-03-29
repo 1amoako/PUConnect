@@ -79,6 +79,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
   const [isAttachmentMenuVisible, setIsAttachmentMenuVisible] = useState(false);
   const [queuedAttachments, setQueuedAttachments] = useState<Attachment[]>([]);
+  const [requestedChats, setRequestedChats] = useState<Record<string, boolean>>({});
 
   const handlePickDocuments = async () => {
     setIsAttachmentMenuVisible(false);
@@ -241,35 +242,59 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
     const chat = SAMPLE_CHATS.find(c => c.id === activeChat);
     if (!chat) return emptyStateContent;
 
+    const isServiceActive = requestedChats[chat.id];
+
     return (
       <View style={[styles.activeChatContainer, { backgroundColor: isDesktop ? 'transparent' : colors.background }]}>
         {/* Chat Header */}
-        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: isDesktop ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : colors.border, backgroundColor: isDesktop ? 'transparent' : colors.background, zIndex: 1000 }]}>
+        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { 
+          borderBottomColor: isServiceActive ? '#007AFF' : (isDesktop ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : colors.border), 
+          backgroundColor: isServiceActive ? '#007AFF' : (isDesktop ? 'transparent' : colors.background), 
+          zIndex: 1000 
+        }]}>
           {!isDesktop && (
             <View style={styles.backButtonContainer}>
-              <TouchableOpacity onPress={() => handleChatSelect(null)} style={[styles.backButtonCircle, { backgroundColor: colors.iconBackground }]}>
-                <Ionicons name="arrow-back" size={24} color={colors.text} />
+              <TouchableOpacity onPress={() => handleChatSelect(null)} style={[styles.backButtonCircle, { backgroundColor: isServiceActive ? "rgba(255,255,255,0.2)" : colors.iconBackground }]}>
+                <Ionicons name="arrow-back" size={24} color={isServiceActive ? "#fff" : colors.text} />
               </TouchableOpacity>
             </View>
           )}
           <View style={styles.chatHeaderInfo}>
-            <Text style={[styles.chatHeaderName, { color: colors.text }]}>{chat.name}</Text>
-            <Text style={[styles.chatHeaderStatus, { color: colors.mutedText }]}>last seen recently</Text>
+            <Text style={[styles.chatHeaderName, { color: isServiceActive ? '#fff' : colors.text }]}>{chat.name}</Text>
+            <Text style={[styles.chatHeaderStatus, { color: isServiceActive ? 'rgba(255,255,255,0.8)' : colors.mutedText }]}>
+              {isServiceActive ? "Active Service" : "last seen recently"}
+            </Text>
           </View>
           <View style={styles.chatHeaderActions}>
-            <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="search-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
+            {!isServiceActive && (
+              <TouchableOpacity 
+                style={[styles.requestServiceBtn, !isDesktop && styles.requestServiceBtnMobile, { backgroundColor: '#007AFF' }]}
+                onPress={() => setRequestedChats(prev => ({ ...prev, [chat.id]: true }))}
+              >
+                {!isDesktop ? (
+                  <Ionicons name="shield-checkmark" size={18} color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="shield-checkmark" size={16} color="#fff" />
+                    <Text style={[styles.requestServiceText, { color: '#fff', marginLeft: 6 }]}>Request Service</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
             <View style={{ zIndex: 2000 }}>
               <TouchableOpacity 
                 style={styles.headerIcon}
                 onPress={() => setIsHeaderMenuVisible(!isHeaderMenuVisible)}
               >
-                <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+                <Ionicons name="ellipsis-vertical" size={24} color={isServiceActive ? "#fff" : colors.text} />
               </TouchableOpacity>
 
               {isHeaderMenuVisible && (
                 <View style={[styles.headerMenu, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
+                    <Ionicons name="search-outline" size={20} color={colors.text} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>Search Chat</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
                     <Ionicons name="ban-outline" size={20} color={colors.mutedText} />
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Block User</Text>
@@ -712,7 +737,26 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerIcon: {
-    marginLeft: 20,
+    marginLeft: 15,
+  },
+  requestServiceBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  requestServiceBtnMobile: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minWidth: 40,
+    justifyContent: 'center',
+  },
+  requestServiceText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   headerMenu: {
     position: "absolute",
