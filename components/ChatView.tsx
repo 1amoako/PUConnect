@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Modal } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from "../context/ThemeContext";
@@ -20,6 +20,7 @@ interface ChatItem {
   lastMessage: string;
   time: string;
   unreadCount?: number;
+  role?: 'client' | 'provider';
 }
 
 interface Message {
@@ -29,15 +30,16 @@ interface Message {
   isSentByMe: boolean;
   isSystem?: boolean;
   type?: 'text' | 'completion_request';
+  status?: 'pending' | 'approved' | 'rejected';
   attachments?: Attachment[];
 }
 
 const SAMPLE_CHATS: ChatItem[] = [
-  { id: "1", name: "Sarah Jenkins", lastMessage: "Let's review the mockups.", time: "18:14", unreadCount: 2 },
-  { id: "2", name: "Alex Rivera", lastMessage: "Yes, the mechanical keyboard is available.", time: "17:46", unreadCount: 1 },
-  { id: "3", name: "Design Team", lastMessage: "Meeting at 10 AM tomorrow.", time: "16:58" },
-  { id: "4", name: "David Chen", lastMessage: "I've pushed the latest code to staging.", time: "15:00", unreadCount: 5 },
-  { id: "5", name: "Alice Cooper", lastMessage: "Thanks for the feedback!", time: "13:32" },
+  { id: "1", name: "Sarah Jenkins", lastMessage: "Let's review the mockups.", time: "18:14", unreadCount: 2, role: 'client' },
+  { id: "2", name: "Alex Rivera", lastMessage: "Yes, the mechanical keyboard is available.", time: "17:46", unreadCount: 1, role: 'provider' },
+  { id: "3", name: "Design Team", lastMessage: "Meeting at 10 AM tomorrow.", time: "16:58", role: 'client' },
+  { id: "4", name: "David Chen", lastMessage: "I've pushed the latest code to staging.", time: "15:00", unreadCount: 5, role: 'provider' },
+  { id: "5", name: "Alice Cooper", lastMessage: "Thanks for the feedback!", time: "13:32", role: 'client' },
 ];
 
 const SAMPLE_MESSAGES: Message[] = [
@@ -60,6 +62,7 @@ const SAMPLE_MESSAGES: Message[] = [
   { id: "m17", text: "Wait, one more thing - did we finalize the button border-radius?", time: "11:35 AM", isSentByMe: true },
   { id: "m18", text: "We're going with 8px for a slightly softer feel than 4px, but not fully rounded.", time: "11:40 AM", isSentByMe: false },
   { id: "m19", text: "Got it. Updating the style guide now. 🎨", time: "11:45 AM", isSentByMe: true },
+  { id: "m20", text: "Service Completion Request", time: "11:50 AM", isSentByMe: false, type: 'completion_request', status: 'pending' },
 ];
 
 interface ChatViewProps {
@@ -80,6 +83,15 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [isAttachmentMenuVisible, setIsAttachmentMenuVisible] = useState(false);
   const [queuedAttachments, setQueuedAttachments] = useState<Attachment[]>([]);
   const [requestedChats, setRequestedChats] = useState<Record<string, boolean>>({});
+  const [serviceAction, setServiceAction] = useState<'terminate' | 'complete' | null>(null);
+  const [actionStatus, setActionStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleCompletionAction = (msgId: string, newStatus: 'approved' | 'rejected') => {
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: newStatus } : m));
+    if (newStatus === 'approved') {
+      setRequestedChats(prev => ({ ...prev, [activeChat!]: false }));
+    }
+  };
 
   const handlePickDocuments = async () => {
     setIsAttachmentMenuVisible(false);
@@ -183,9 +195,14 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
           <Text style={[styles.avatarText, { color: colors.text }]}>{chat.name.charAt(0)}</Text>
         </View>
         <View style={styles.chatDetails}>
-          <Text style={[styles.chatName, { color: isActive ? colors.background : colors.text }]} numberOfLines={1}>
-            {chat.name}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <Text style={[styles.chatName, { color: isActive ? colors.background : colors.text, marginBottom: 0 }]} numberOfLines={1}>
+              {chat.name}
+            </Text>
+            {requestedChats[chat.id] && (
+              <View style={[styles.activeDot, { backgroundColor: isActive ? colors.background : '#007AFF' }]} />
+            )}
+          </View>
           <Text style={[styles.chatMessage, { color: isActive ? colors.background : colors.mutedText }]} numberOfLines={1}>
             {chat.lastMessage}
           </Text>
@@ -266,20 +283,33 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
             </Text>
           </View>
           <View style={styles.chatHeaderActions}>
-            {!isServiceActive && (
+            {!isServiceActive ? (
               <TouchableOpacity 
                 style={[styles.requestServiceBtn, !isDesktop && styles.requestServiceBtnMobile, { backgroundColor: '#007AFF' }]}
                 onPress={() => setRequestedChats(prev => ({ ...prev, [chat.id]: true }))}
               >
                 {!isDesktop ? (
-                  <Ionicons name="shield-checkmark" size={18} color="#fff" />
+                  <Ionicons name="flash" size={18} color="#fff" />
                 ) : (
                   <>
-                    <Ionicons name="shield-checkmark" size={16} color="#fff" />
+                    <Ionicons name="flash" size={16} color="#fff" />
                     <Text style={[styles.requestServiceText, { color: '#fff', marginLeft: 6 }]}>Request Service</Text>
                   </>
                 )}
               </TouchableOpacity>
+            ) : (
+              <View 
+                style={[styles.requestServiceBtn, !isDesktop && styles.requestServiceBtnMobile, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+              >
+                {!isDesktop ? (
+                  <Ionicons name="sync" size={18} color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="sync" size={16} color="#fff" />
+                    <Text style={[styles.requestServiceText, { color: '#fff', marginLeft: 6 }]}>In Progress</Text>
+                  </>
+                )}
+              </View>
             )}
             <View style={{ zIndex: 2000 }}>
               <TouchableOpacity 
@@ -295,6 +325,40 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                     <Ionicons name="search-outline" size={20} color={colors.text} />
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Search Chat</Text>
                   </TouchableOpacity>
+                  {chat.role === 'client' && (
+                    <TouchableOpacity 
+                      style={[styles.menuItem, { opacity: isServiceActive ? 1 : 0.5 }]} 
+                      disabled={!isServiceActive}
+                      onPress={() => {
+                        setIsHeaderMenuVisible(false);
+                        setServiceAction('terminate');
+                        setActionStatus('idle');
+                      }}
+                    >
+                      <Ionicons name="close-circle-outline" size={20} color={isServiceActive ? "#FF3B30" : colors.mutedText} />
+                      <Text style={[styles.menuItemText, { color: isServiceActive ? "#FF3B30" : colors.mutedText }]}>Terminate Service</Text>
+                    </TouchableOpacity>
+                  )}
+                  {chat.role === 'provider' && (
+                    <TouchableOpacity 
+                      style={[styles.menuItem, { opacity: isServiceActive ? 1 : 0.5 }]} 
+                      disabled={!isServiceActive}
+                      onPress={() => {
+                        setIsHeaderMenuVisible(false);
+                        setMessages(prev => [...prev, {
+                          id: Math.random().toString(),
+                          text: "Service Completion Request",
+                          time: "Just now",
+                          isSentByMe: true,
+                          type: 'completion_request',
+                          status: 'pending'
+                        }]);
+                      }}
+                    >
+                      <Ionicons name="checkmark-circle-outline" size={20} color={isServiceActive ? "#34C759" : colors.mutedText} />
+                      <Text style={[styles.menuItemText, { color: isServiceActive ? "#34C759" : colors.mutedText }]}>Submit Completion</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
                     <Ionicons name="ban-outline" size={20} color={colors.mutedText} />
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Block User</Text>
@@ -312,6 +376,54 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                 <View key={msg.id} style={styles.systemMessageContainer}>
                   <View style={[styles.systemMessagePill, { backgroundColor: colors.iconBackground }]}>
                     <Text style={[styles.systemMessageText, { color: colors.mutedText }]}>{msg.text}</Text>
+                  </View>
+                </View>
+              );
+            }
+
+            if (msg.type === 'completion_request') {
+              const showActions = !msg.isSentByMe;
+              return (
+                <View key={msg.id} style={styles.completionCardContainer}>
+                  <View style={[styles.completionCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: colors.border }]}>
+                    <View style={styles.completionCardHeader}>
+                      <Ionicons name="sparkles" size={20} color={colors.primary} />
+                      <Text style={[styles.completionCardTitle, { color: colors.text }]}>Service Completion Request</Text>
+                    </View>
+                    <Text style={[styles.completionCardBody, { color: colors.mutedText }]}>
+                      The expert has submitted this service for final review. Please confirm if requirements are met.
+                    </Text>
+                    
+                    {msg.status === 'pending' ? (
+                      showActions ? (
+                        <View style={styles.completionCardActions}>
+                          <TouchableOpacity 
+                            style={[styles.completionActionBtn, { backgroundColor: colors.iconBackground }]}
+                            onPress={() => handleCompletionAction(msg.id, 'rejected')}
+                          >
+                            <Text style={[styles.completionActionText, { color: '#FF3B30' }]}>Request Revisions</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={[styles.completionActionBtn, { backgroundColor: '#34C759' }]}
+                            onPress={() => handleCompletionAction(msg.id, 'approved')}
+                          >
+                            <Text style={[styles.completionActionText, { color: '#fff' }]}>Approve & Close</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <View style={styles.completionPendingBadge}>
+                          <Ionicons name="time-outline" size={16} color={colors.mutedText} />
+                          <Text style={[styles.completionStatusText, { color: colors.mutedText, marginLeft: 6 }]}>Awaiting Client Consent...</Text>
+                        </View>
+                      )
+                    ) : (
+                      <View style={[styles.completionResultBadge, { backgroundColor: msg.status === 'approved' ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)' }]}>
+                        <Ionicons name={msg.status === 'approved' ? "checkmark-circle" : "close-circle"} size={16} color={msg.status === 'approved' ? '#34C759' : '#FF3B30'} />
+                        <Text style={[styles.completionResultText, { color: msg.status === 'approved' ? '#34C759' : '#FF3B30', marginLeft: 6 }]}>
+                          {msg.status === 'approved' ? 'Service Approved & Completed' : 'Revisions Requested'}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               );
@@ -501,10 +613,76 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   };
 
 
+  const renderServiceModal = () => {
+    if (!serviceAction) return null;
+
+    const handleConfirm = () => {
+      setActionStatus('loading');
+      setTimeout(() => {
+        setActionStatus('success');
+        setTimeout(() => {
+          setRequestedChats(prev => ({ ...prev, [activeChat!]: false }));
+          setServiceAction(null);
+          setActionStatus('idle');
+          setIsHeaderMenuVisible(false);
+        }, 1500);
+      }, 1500);
+    };
+
+    return (
+      <Modal visible={!!serviceAction} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: colors.border }]}>
+            {actionStatus === 'loading' ? (
+              <View style={styles.statusContainer}>
+                <Ionicons name="hourglass-outline" size={48} color={colors.primary} />
+                <Text style={[styles.modalTitle, { color: colors.text, marginTop: 15 }]}>Processing...</Text>
+              </View>
+            ) : actionStatus === 'success' ? (
+              <View style={styles.statusContainer}>
+                <Ionicons name="checkmark-circle" size={64} color="#34C759" />
+                <Text style={[styles.modalTitle, { color: colors.text, marginTop: 15 }]}>Success!</Text>
+                <Text style={[styles.modalSub, { color: colors.mutedText, textAlign: 'center' }]}>
+                  Service has been {serviceAction === 'terminate' ? 'terminated' : 'completed'}.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  {serviceAction === 'terminate' ? 'Terminate Service' : 'Complete Service'}
+                </Text>
+                <Text style={[styles.modalSub, { color: colors.mutedText, textAlign: 'center' }]}>
+                  {serviceAction === 'terminate' 
+                    ? 'Are you sure you want to terminate this active service request? This cannot be undone.' 
+                    : 'Are you sure you want to mark this service request as fully completed?'}
+                </Text>
+                <View style={styles.modalActions}>
+                  <TouchableOpacity 
+                    style={[styles.modalBtn, { backgroundColor: colors.iconBackground }]} 
+                    onPress={() => setServiceAction(null)}
+                  >
+                    <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalBtn, { backgroundColor: serviceAction === 'terminate' ? '#FF3B30' : '#34C759' }]} 
+                    onPress={handleConfirm}
+                  >
+                    <Text style={[styles.modalBtnText, { color: '#fff' }]}>Confirm</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   if (!isDesktop) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {activeChat ? renderActiveChat() : chatListContent}
+        {renderServiceModal()}
       </View>
     );
   }
@@ -525,6 +703,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
           {activeChat ? renderActiveChat() : emptyStateContent}
         </View>
       </View>
+      {renderServiceModal()}
     </View>
   );
 }
@@ -1040,5 +1219,126 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 8,
     textAlign: 'center',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    boxShadow: '0 10 30 rgba(0,0,0,0.2)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSub: {
+    fontSize: 14,
+    marginBottom: 24,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  statusContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  completionCardContainer: {
+    paddingHorizontal: 20,
+    marginVertical: 12,
+    alignItems: 'center',
+    width: '100%',
+  },
+  completionCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    boxShadow: '0 4 15 rgba(0,0,0,0.05)',
+  },
+  completionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  completionCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  completionCardBody: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  completionCardActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  completionActionBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  completionActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completionPendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  completionStatusText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completionResultBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  completionResultText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
