@@ -36,6 +36,7 @@ export default function OTPScreen() {
     if (otp.length === 6) {
       handleVerify();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
   const handleBoxPress = () => {

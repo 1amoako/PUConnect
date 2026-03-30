@@ -241,7 +241,7 @@ export default function ProfileView({
                 <Ionicons name="time-outline" size={32} color={colors.primary} />
                 <Text style={[styles.statusTitle, { color: colors.text }]}>Review in Progress</Text>
                 <Text style={[styles.statusDescription, { color: colors.mutedText }]}>
-                  Your expert profile application is currently being reviewed by our team. You'll be notified once it's active.
+                  Your expert profile application is currently being reviewed by our team. You&apos;ll be notified once it&apos;s active.
                 </Text>
               </View>
             ) : (

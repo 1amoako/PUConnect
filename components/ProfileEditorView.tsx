@@ -5,7 +5,6 @@ import {
     Easing, 
     Image, 
     Modal, 
-    Platform, 
     ScrollView, 
     StyleSheet, 
     Text, 
@@ -104,7 +103,7 @@ export default function ProfileEditorView({ isVisible, isDesktop, mode, onBack, 
       dot2Anim.setValue(0);
       dot3Anim.setValue(0);
     }
-  }, [isLoading]);
+  }, [isLoading, dot1Anim, dot2Anim, dot3Anim]);
 
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {

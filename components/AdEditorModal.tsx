@@ -9,8 +9,7 @@ import {
     TouchableOpacity, 
     View,
     Image,
-    ActivityIndicator,
-    Platform
+    ActivityIndicator
 } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from "../context/ThemeContext";
@@ -48,7 +47,7 @@ export default function AdEditorModal({ isVisible, isDesktop, type, onBack, onSa
         setImage("");
       }
     }
-  }, [isVisible]);
+  }, [isVisible, initialData]);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({

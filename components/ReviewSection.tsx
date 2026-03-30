@@ -165,7 +165,7 @@ export default function ReviewSection({
         setReviews([newReview, ...reviews]);
       }
       setIsWriting(false);
-    } catch (err) {
+    } catch {
       setError("An unexpected network error occurred. Please try again.");
     } finally {
       setLoading(false);

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, TouchableOpacity, Dimensions } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft, Layout } from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
 import { GlassButton } from "../components/GlassButton";
@@ -8,11 +8,11 @@ import { GlassContainer } from "../components/GlassContainer";
 import { GlassTextInput } from "../components/GlassTextInput";
 import { useTheme } from "../context/ThemeContext";
 
-const { width } = Dimensions.get("window");
+
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
