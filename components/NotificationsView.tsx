@@ -1,77 +1,80 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import { GlassButton } from "./GlassButton";
-import { GlassContainer } from "./GlassContainer";
 
-interface NotificationItem {
+export interface NotificationItem {
   id: string;
-  type: "like" | "comment" | "mention" | "system" | "order";
+  type: "order" | "social" | "review" | "system";
   title: string;
   message: string;
   time: string;
   isRead: boolean;
   icon: string;
   color?: string;
+  actionPath: string;
+  actionTab?: "chat" | "discover" | "profile" | "admin" | "home";
+  relatedEntityId?: string;
 }
 
 const SAMPLE_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "1",
-    type: "like",
-    title: "New Like",
-    message: "Sarah Jenkins liked your UI/UX Design Studio post.",
+    type: "review",
+    title: "New 5-Star Review",
+    message: "Sarah Jenkins left a wonderful review on your profile.",
     time: "2m ago",
     isRead: false,
-    icon: "heart",
+    icon: "star",
+    actionPath: "/profile",
+    actionTab: "profile",
+    relatedEntityId: "1",
   },
   {
     id: "2",
     type: "order",
-    title: "New Order",
-    message: "You have a new order for 'Mechanical Keyboard Pro'.",
+    title: "Service Completion",
+    message: "David Chen submitted a service for your final approval.",
     time: "15m ago",
     isRead: false,
-    icon: "cart",
+    icon: "checkbox",
+    actionPath: "/chat",
+    actionTab: "chat",
+    relatedEntityId: "2",
   },
   {
     id: "3",
-    type: "mention",
-    title: "Mentioned",
-    message: "David Chen mentioned you in a comment: '@jacobzero looks good!'",
+    type: "social",
+    title: "New Connection",
+    message: "Alice Cooper started following you.",
     time: "1h ago",
     isRead: true,
-    icon: "at",
+    icon: "person-add",
+    actionPath: "/discover",
+    actionTab: "discover",
+    relatedEntityId: "3",
   },
   {
     id: "4",
-    type: "comment",
-    title: "New Comment",
-    message: "Alice Cooper commented on your profile.",
-    time: "3h ago",
-    isRead: true,
-    icon: "chatbubble",
-  },
-  {
-    id: "5",
     type: "system",
-    title: "System Update",
-    message: "Your profile has been successfully verified by the admin team.",
+    title: "Expert Profile Verified",
+    message: "Your expert application has been approved! You can now offer services.",
     time: "1d ago",
     isRead: true,
     icon: "shield-checkmark",
+    actionPath: "/profile",
+    actionTab: "profile",
   },
 ];
 
 interface NotificationsViewProps {
   isDesktop: boolean;
+  onNotificationPress: (item: NotificationItem) => void;
 }
 
-export default function NotificationsView({ isDesktop }: NotificationsViewProps) {
+export default function NotificationsView({ isDesktop, onNotificationPress }: NotificationsViewProps) {
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
   const renderNotification = (item: NotificationItem) => (
     <TouchableOpacity
@@ -81,7 +84,7 @@ export default function NotificationsView({ isDesktop }: NotificationsViewProps)
         { borderBottomColor: colors.border },
         !item.isRead && { backgroundColor: colors.iconBackground + "40" },
       ]}
-      onPress={() => setSelectedNotification(item)}
+      onPress={() => onNotificationPress(item)}
     >
       <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
         <Ionicons name={item.icon as any} size={20} color={colors.background} />
@@ -141,42 +144,6 @@ export default function NotificationsView({ isDesktop }: NotificationsViewProps)
         )}
       </ScrollView>
 
-      {/* Notification Detail Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={!!selectedNotification}
-        onRequestClose={() => setSelectedNotification(null)}
-      >
-        <TouchableOpacity 
-          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]} 
-          activeOpacity={1} 
-          onPress={() => setSelectedNotification(null)}
-        >
-          <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
-            {selectedNotification && (
-              <>
-                <View style={[styles.modalIcon, { backgroundColor: colors.primary }]}>
-                  <Ionicons name={selectedNotification.icon as any} size={40} color={colors.background} />
-                </View>
-                <Text style={[styles.modalTitle, { color: colors.text }]}>{selectedNotification.title}</Text>
-                <Text style={[styles.modalTime, { color: colors.mutedText }]}>{selectedNotification.time}</Text>
-                <Text style={[styles.modalDescription, { color: colors.secondaryText }]}>
-                  {selectedNotification.message}
-                </Text>
-                
-                <View style={styles.modalButtons}>
-                  <GlassButton 
-                    title="Close" 
-                    onPress={() => setSelectedNotification(null)}
-                    style={styles.modalButton}
-                  />
-                </View>
-              </>
-            )}
-          </GlassContainer>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 }
@@ -282,49 +249,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 40,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  modalContent: {
-    width: "100%",
-    maxWidth: 400,
-    padding: 30,
-    alignItems: "center",
-    borderRadius: 24,
-    borderWidth: 1,
-  },
-  modalIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  modalTime: {
-    fontSize: 14,
-    marginBottom: 20,
-  },
-  modalDescription: {
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  modalButtons: {
-    width: "100%",
-  },
-  modalButton: {
-    width: "100%",
-  },
+
 });
 

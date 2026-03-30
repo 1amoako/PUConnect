@@ -1,7 +1,7 @@
 import AdminDashboard from "@/components/AdminDashboard";
 import AdminReviewView from "@/components/AdminReviewView";
 import AdEditorModal from "@/components/AdEditorModal";
-import NotificationsView from "@/components/NotificationsView";
+import NotificationsView, { NotificationItem } from "@/components/NotificationsView";
 import PeopleView from "@/components/PeopleView";
 import ProfileEditorView from "@/components/ProfileEditorView";
 import ProfileView from "@/components/ProfileView";
@@ -97,10 +97,15 @@ export default function FeedScreen() {
   const indicatorWidth = useSharedValue(0);
   const [tabLayouts, setTabLayouts] = useState<{[key: string]: {x: number, width: number}}>({});
 
+  // Mock Notification Counts
+  const unreadChatsCount = 1;
+  const unreadNotificationsCount = 2;
+  const pendingAdminCount = currentUser.expertStatus === 'pending' ? 1 : 3; // Mocking 3 generic admin issues if not pending
+
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
-    { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    ...(isAdmin ? [{ name: "admin", icon: "shield-checkmark-outline", label: "Admin" }] : []),
+    { name: "chat", icon: "chatbubble-outline", label: "Chat", badge: unreadChatsCount },
+    ...(isAdmin ? [{ name: "admin", icon: "shield-checkmark-outline", label: "Admin", badge: pendingAdminCount }] : []),
     { name: "discover", icon: "compass-outline", label: "People" },
     { name: "profile", icon: "person-outline", label: "Me" },
   ];
@@ -165,6 +170,28 @@ export default function FeedScreen() {
     setSelectedProfile(null);
     setDirectChatId(profileId);
     setActiveTab("chat");
+  };
+
+  const handleNotificationPress = (item: NotificationItem) => {
+    setIsNotificationsActive(false);
+
+    if (item.actionPath === '/chat') {
+      if (item.relatedEntityId) {
+        setDirectChatId(item.relatedEntityId);
+      }
+      setActiveTab('chat');
+    } else if (item.actionPath === '/profile') {
+      if (item.relatedEntityId) {
+        handleProfileClick(item.relatedEntityId);
+      } else {
+        setSelectedProfile(null);
+        setActiveTab('profile'); 
+      }
+    } else if (item.actionPath === '/discover') {
+      setActiveTab('discover');
+    } else if (item.actionTab) {
+      setActiveTab(item.actionTab);
+    }
   };
 
   const handleSaveAdOrRequest = (data: any) => {
@@ -280,7 +307,7 @@ export default function FeedScreen() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity 
-                style={styles.iconButton}
+                style={[styles.iconButton, { position: 'relative' }]}
                 onPress={() => setIsNotificationsActive(!isNotificationsActive)}
               >
                 <Ionicons 
@@ -288,6 +315,13 @@ export default function FeedScreen() {
                   size={28} 
                   color={colors.text} 
                 />
+                {unreadNotificationsCount > 0 && (
+                  <View style={styles.navBadge}>
+                    <Text style={styles.navBadgeText}>
+                      {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -313,7 +347,7 @@ export default function FeedScreen() {
     );
   };
 
-  const renderNavItem = (name: string, icon: any, label: string) => {
+  const renderNavItem = (name: string, icon: any, label: string, badge?: number) => {
     const isActive = activeTab === name;
     const isSpecial = name === "admin";
     const showSpecialStyle = isSpecial && !isDesktop;
@@ -347,6 +381,11 @@ export default function FeedScreen() {
             size={showSpecialStyle ? 28 : 24} 
             color={showSpecialStyle ? colors.background : (isActive ? colors.primary : colors.mutedText)} 
           />
+          {!!badge && badge > 0 && (
+            <View style={styles.navBadge}>
+              <Text style={styles.navBadgeText}>{badge > 99 ? '99+' : badge}</Text>
+            </View>
+          )}
         </View>
         {(isDesktop || (isActive && !isSpecial)) && (
           <Text style={[
@@ -368,7 +407,7 @@ export default function FeedScreen() {
           <View style={[styles.sidebar, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <View style={styles.sidebarContent}>
               <Text style={[styles.sidebarTitle, { color: colors.mutedText }]}>Menu</Text>
-              {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+              {navItems.map(item => renderNavItem(item.name, item.icon, item.label, item.badge))}
               <View style={[styles.sidebarDivider, { backgroundColor: colors.border }]} />
               {renderNavItem("settings", "settings-outline", "Settings")}
             </View>
@@ -393,7 +432,7 @@ export default function FeedScreen() {
           ) : isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
           ) : isNotificationsActive ? (
-            <NotificationsView isDesktop={isDesktop} />
+            <NotificationsView isDesktop={isDesktop} onNotificationPress={handleNotificationPress} />
           ) : (
             <>
               {activeTab === "home" && (
@@ -552,7 +591,7 @@ export default function FeedScreen() {
                   <View style={[styles.bottomNav, { backgroundColor: colors.background + 'B3', borderColor: colors.border, bottom: Math.max(insets.bottom, 10) }]}>
                     <Animated.View style={[styles.activeIndicator, animatedIndicatorStyle, { backgroundColor: colors.primary + '1A' }]} />
                     <View style={styles.bottomNavContent}>
-                      {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
+                      {navItems.map(item => renderNavItem(item.name, item.icon, item.label, item.badge))}
                     </View>
                   </View>
                 </>
@@ -889,8 +928,28 @@ const styles = StyleSheet.create({
   },
   bottomNavLabel: {
     fontSize: 10,
-    fontWeight: "700",
-    marginTop: 2,
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  navBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#fff',
+    zIndex: 10,
+  },
+  navBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   specialIconContainer: {
     width: 56,
