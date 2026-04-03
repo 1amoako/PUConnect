@@ -6,6 +6,7 @@ import PeopleView from "@/components/PeopleView";
 import ProfileEditorView from "@/components/ProfileEditorView";
 import ProfileView from "@/components/ProfileView";
 import PublicProfileView, { PublicProfileData } from "@/components/PublicProfileView";
+import { ReportModal } from "@/components/ReportModal";
 import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
 import { Ionicons } from "@expo/vector-icons";
@@ -88,6 +89,8 @@ export default function FeedScreen() {
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
   const [chatActivityContext, setChatActivityContext] = useState<CardData | null>(null);
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+  const [reportTargetName, setReportTargetName] = useState("");
 
   // Ad Editor State
   const [isAdEditorActive, setIsAdEditorActive] = useState(false);
@@ -482,6 +485,10 @@ export default function FeedScreen() {
                           isDesktop={isDesktop} 
                           hideTag={true}
                           onPress={() => handleProfileClick(item)}
+                          onReport={() => {
+                            setReportTargetName(item.title);
+                            setIsReportModalVisible(true);
+                          }}
                         />
                       ))}
                     </View>
@@ -644,15 +651,43 @@ export default function FeedScreen() {
           />
         </View>
 
+        </View>
+
         <AdEditorModal
-          isVisible={isAdEditorActive}
-          isDesktop={isDesktop}
-          onBack={() => setIsAdEditorActive(false)}
-          onSave={handleSaveAdOrRequest}
-          type={adEditorType}
-          initialData={adToEdit}
-        />
-      </View>
+        isVisible={isAdEditorActive}
+        type={adEditorType}
+        initialData={adToEdit}
+        onBack={() => setIsAdEditorActive(false)}
+        onSave={(data) => {
+          if (adToEdit) {
+            if (adEditorType === 'skill') {
+              setCurrentUser(prev => ({ ...prev, ads: prev.ads.map(ad => ad.id === adToEdit.id ? { ...ad, ...data } as any : ad) }));
+            } else {
+              setCurrentUser(prev => ({ ...prev, requests: prev.requests.map(req => req.id === adToEdit.id ? { ...req, ...data } as any : req) }));
+            }
+          } else {
+            const newItem = {
+              id: Math.random().toString(),
+              type: adEditorType,
+              ...data,
+            };
+            if (adEditorType === 'skill') {
+              setCurrentUser(prev => ({ ...prev, ads: [newItem as any, ...prev.ads] }));
+            } else {
+              setCurrentUser(prev => ({ ...prev, requests: [newItem as any, ...prev.requests] }));
+            }
+          }
+          setIsAdEditorActive(false);
+        }}
+        isDesktop={isDesktop}
+      />
+
+      <ReportModal
+        visible={isReportModalVisible}
+        onClose={() => setIsReportModalVisible(false)}
+        targetName={reportTargetName}
+        isDesktop={isDesktop}
+      />
     </SafeAreaView>
   );
 }

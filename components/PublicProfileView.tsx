@@ -4,7 +4,6 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "rea
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import ReviewSection from "./ReviewSection";
-
 export interface PublicProfileData {
   id: string;
   name: string;

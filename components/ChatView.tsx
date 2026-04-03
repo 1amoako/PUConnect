@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image,
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from "../context/ThemeContext";
+import { ReportModal } from "./ReportModal";
 
 export interface Attachment {
   id: string;
@@ -85,6 +86,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [requestedChats, setRequestedChats] = useState<Record<string, boolean>>({});
   const [serviceAction, setServiceAction] = useState<'terminate' | 'complete' | null>(null);
   const [actionStatus, setActionStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
   const handleCompletionAction = (msgId: string, newStatus: 'approved' | 'rejected') => {
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: newStatus } : m));
@@ -362,6 +364,16 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                   <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
                     <Ionicons name="ban-outline" size={20} color={colors.mutedText} />
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Block User</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.menuItem} 
+                    onPress={() => {
+                      setIsHeaderMenuVisible(false);
+                      setIsReportModalVisible(true);
+                    }}
+                  >
+                    <Ionicons name="warning-outline" size={20} color="#FF3B30" />
+                    <Text style={[styles.menuItemText, { color: "#FF3B30" }]}>Report User</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -683,6 +695,14 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {activeChat ? renderActiveChat() : chatListContent}
         {renderServiceModal()}
+        {activeChat && (
+          <ReportModal
+            visible={isReportModalVisible}
+            onClose={() => setIsReportModalVisible(false)}
+            targetName={SAMPLE_CHATS.find((c) => c.id === activeChat)?.name || "User"}
+            isDesktop={isDesktop}
+          />
+        )}
       </View>
     );
   }
@@ -704,6 +724,15 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
         </View>
       </View>
       {renderServiceModal()}
+      
+      {activeChat && (
+        <ReportModal
+          visible={isReportModalVisible}
+          onClose={() => setIsReportModalVisible(false)}
+          targetName={SAMPLE_CHATS.find((c) => c.id === activeChat)?.name || "User"}
+          isDesktop={isDesktop}
+        />
+      )}
     </View>
   );
 }

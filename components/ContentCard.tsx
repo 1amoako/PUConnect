@@ -139,9 +139,10 @@ interface ContentCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   hideTag?: boolean;
+  onReport?: () => void;
 }
 
-export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete, hideTag }: ContentCardProps) {
+export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete, hideTag, onReport }: ContentCardProps) {
   const { colors, isDark } = useTheme();
   
   return (
@@ -193,9 +194,16 @@ export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit,
           <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
             {data.title}
           </Text>
-          <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="heart-outline" size={20} color={colors.mutedText} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {onReport && !isOwner && (
+              <TouchableOpacity onPress={onReport} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="warning-outline" size={18} color="#FF3B30" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="heart-outline" size={20} color={colors.mutedText} />
+            </TouchableOpacity>
+          </View>
         </View>
         
         <View style={styles.authorRow}>
