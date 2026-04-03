@@ -6,11 +6,13 @@ import { GlassContainer } from "./GlassContainer";
 import { GlassTextInput } from "./GlassTextInput";
 
 type AdminTab = "verifications" | "reports" | "feedback";
-type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | null;
+type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | "promote_admin" | null;
 
 interface AdminReviewViewProps {
   isDesktop: boolean;
   onBack: () => void;
+  isManagementOpen?: boolean;
+  onCloseManagement?: () => void;
 }
 
 const MOCK_VERIFICATIONS = [
@@ -61,24 +63,44 @@ const MOCK_FEEDBACK = [
   },
 ];
 
+const MOCK_USERS = [
+  { id: "u1", name: "Jacob Zero", email: "jacob@example.com", role: "Expert", joined: "2023-12-01", status: "Active" },
+  { id: "u2", name: "Sarah Jenkins", email: "sarah.j@example.com", role: "Expert", joined: "2024-01-15", status: "Active" },
+  { id: "u3", name: "David Chen", email: "david.c@example.com", role: "User", joined: "2024-02-10", status: "Active" },
+  { id: "u4", name: "Alice Cooper", email: "alice@example.com", role: "User", joined: "2024-02-20", status: "Active" },
+  { id: "u5", name: "John Doe", email: "john@example.com", role: "User", joined: "2024-03-01", status: "Flagged" },
+  { id: "u6", name: "Michael Smith", email: "mike@example.com", role: "User", joined: "2024-03-05", status: "Active" },
+  { id: "u7", name: "Emily Brown", email: "emily@example.com", role: "Expert", joined: "2024-03-10", status: "Active" },
+];
+
 const STATS = [
   { id: "1", label: "Queue", value: "8", icon: "person-add-outline", color: "#007AFF" },
   { id: "2", label: "Content", value: "23", icon: "construct-outline", color: "#5856D6" },
   { id: "3", label: "Reports", value: "3", icon: "flag-outline", color: "#FF3B30" },
 ];
 
-export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewProps) {
+export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, onCloseManagement }: AdminReviewViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<ActionType>(null);
   const [adminMessage, setAdminMessage] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "success" | "failure">("idle");
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<"All" | "Expert" | "User">("All");
 
   const dot1Anim = useRef(new Animated.Value(0)).current;
   const dot2Anim = useRef(new Animated.Value(0)).current;
   const dot3Anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isManagementOpen !== undefined) {
+      setIsUserManagementOpen(isManagementOpen);
+    }
+  }, [isManagementOpen]);
 
   useEffect(() => {
     if (actionStatus === "loading") {
@@ -318,8 +340,14 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             <View style={[styles.statusIconCircle, { backgroundColor: '#34C75920' }]}>
               <Ionicons name="checkmark-circle" size={64} color="#34C759" />
             </View>
-            <Text style={[styles.statusTitle, { color: colors.text }]}>Action Successful!</Text>
-            <Text style={[styles.statusSub, { color: colors.mutedText }]}>The issue has been resolved and the user notified.</Text>
+            <Text style={[styles.statusTitle, { color: colors.text }]}>
+              {pendingAction === "promote_admin" ? "User Elevated!" : "Action Successful!"}
+            </Text>
+            <Text style={[styles.statusSub, { color: colors.mutedText }]}>
+              {pendingAction === "promote_admin" 
+                ? `${selectedItem?.name} has been promoted to Administrator.` 
+                : "The issue has been resolved and the user notified."}
+            </Text>
           </View>
         );
       }
@@ -449,25 +477,51 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
                 <Text style={[styles.actionPromptText, { color: colors.text }]}>
                   {pendingAction === "reject" ? "Rejecting Verification" : 
                    pendingAction === "request_changes" ? "Requesting Changes" : 
+                   pendingAction === "promote_admin" ? "Elevate to Administrator" :
                    pendingAction === "ban" ? "Banning User" : "Issuing Warning"}
                 </Text>
-                <GlassTextInput
-                  placeholder="Add message (optional)"
-                  value={adminMessage}
-                  onChangeText={setAdminMessage}
-                  multiline
-                  style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
-                />
+                {pendingAction === "promote_admin" ? (
+                  <View style={styles.passwordChallenge}>
+                    <Text style={[styles.challengeSub, { color: colors.mutedText }]}>
+                      This is a high-level administrative action. Please verify your credentials to continue.
+                    </Text>
+                    <GlassTextInput
+                      placeholder="Admin Password"
+                      value={adminPassword}
+                      onChangeText={setAdminPassword}
+                      secureTextEntry
+                      style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                    />
+                  </View>
+                ) : (
+                  <GlassTextInput
+                    placeholder="Add message (optional)"
+                    value={adminMessage}
+                    onChangeText={setAdminMessage}
+                    multiline
+                    style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                  />
+                )}
                 <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
                   <TouchableOpacity 
                     style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.primary }]}
-                    onPress={() => handleConfirmAction(pendingAction)}
+                    onPress={() => {
+                      if (pendingAction === "promote_admin" && !adminPassword) {
+                        return; // Add validation if needed
+                      }
+                      handleConfirmAction(pendingAction);
+                    }}
                   >
-                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Confirm Action</Text>
+                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>
+                      {pendingAction === "promote_admin" ? "Verify & Elevate" : "Confirm Action"}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.iconBackground }]}
-                    onPress={() => setPendingAction(null)}
+                    onPress={() => {
+                      setPendingAction(null);
+                      setAdminPassword("");
+                    }}
                   >
                     <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Cancel</Text>
                   </TouchableOpacity>
@@ -546,8 +600,90 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     );
   };
 
+  const renderUserManagementView = () => {
+    if (!isUserManagementOpen) return null;
+
+    const filteredUsers = MOCK_USERS.filter(user => {
+      const matchesSearch = user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
+                           user.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+      const matchesRole = userRoleFilter === "All" || user.role === userRoleFilter;
+      return matchesSearch && matchesRole;
+    });
+
+    return (
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background, zIndex: 1000 }]}>
+        <View style={[styles.managementHeader, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (onCloseManagement) onCloseManagement();
+              setIsUserManagementOpen(false);
+            }} 
+            style={styles.backBtn}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.managementTitle, { color: colors.text }]}>User Directory</Text>
+        </View>
+
+        <View style={styles.searchSection}>
+          <GlassTextInput
+            placeholder="Search by name or email..."
+            value={userSearchQuery}
+            onChangeText={setUserSearchQuery}
+            icon="search"
+          />
+          <View style={styles.filterRow}>
+            {(["All", "Expert", "User"] as const).map((role) => (
+              <TouchableOpacity 
+                key={role}
+                style={[
+                  styles.filterChip, 
+                  userRoleFilter === role && { backgroundColor: colors.primary }
+                ]}
+                onPress={() => setUserRoleFilter(role)}
+              >
+                <Text style={[
+                  styles.filterChipText, 
+                  { color: userRoleFilter === role ? colors.background : colors.mutedText }
+                ]}>
+                  {role}s
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.userListScroll}>
+          {filteredUsers.map((user) => (
+            <TouchableOpacity 
+              key={user.id} 
+              style={[styles.userCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+              onPress={() => {
+                setSelectedItem(user);
+                setPendingAction("promote_admin");
+                setShowModal(true);
+              }}
+            >
+              <View style={styles.userIcon}>
+                <Ionicons name="person-circle-outline" size={40} color={colors.primary} />
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={[styles.userName, { color: colors.text }]}>{user.name}</Text>
+                <Text style={[styles.userMeta, { color: colors.mutedText }]}>{user.email} • Joined {user.joined}</Text>
+              </View>
+              <View style={[styles.roleBadge, { backgroundColor: colors.iconBackground }]}>
+                 <Text style={[styles.roleBadgeText, { color: colors.primary }]}>{user.role}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {renderUserManagementView()}
       <ScrollView 
         style={styles.scroll} 
         contentContainerStyle={[
@@ -560,9 +696,11 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
       >
               {/* Moderation Hero & Stats */}
         <View style={[styles.heroContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.6)' : 'rgba(255, 255, 255, 0.7)', borderColor: colors.border }]}>
-          <View style={styles.heroTextSection}>
-            <Text style={[styles.bannerTitle, { color: colors.text }]}>Moderation Center</Text>
-            <Text style={[styles.bannerSub, { color: colors.mutedText }]}>Live system monitoring and quality control</Text>
+          <View style={styles.heroTextRow}>
+            <View style={styles.heroTextSection}>
+              <Text style={[styles.bannerTitle, { color: colors.text }]}>Moderation Center</Text>
+              <Text style={[styles.bannerSub, { color: colors.mutedText }]}>Live system monitoring and quality control</Text>
+            </View>
           </View>
           
           <View style={styles.statsGrid}>
@@ -948,5 +1086,117 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     paddingTop: 12,
     marginBottom: 15,
+  },
+  heroTextRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    width: "100%",
+  },
+  menuIconButton: {
+    padding: 10,
+    borderRadius: 12,
+  },
+  adminDropDown: {
+    position: 'absolute',
+    top: 70,
+    right: 22,
+    width: 200,
+    borderRadius: 20,
+    padding: 10,
+    zIndex: 100,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.15)",
+  },
+  dropDownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 12,
+  },
+  dropDownText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  dropDownDivider: {
+    height: 1,
+    marginVertical: 4,
+  },
+  managementHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+  },
+  backBtn: {
+    marginRight: 15,
+  },
+  managementTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  searchSection: {
+    padding: 20,
+    gap: 15,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  userListScroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  userIcon: {
+    marginRight: 15,
+  },
+  userInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  userMeta: {
+    fontSize: 13,
+  },
+  roleBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  roleBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  passwordChallenge: {
+    marginBottom: 20,
+  },
+  challengeSub: {
+    fontSize: 13,
+    marginBottom: 15,
+    lineHeight: 18,
   },
 });

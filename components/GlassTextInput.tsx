@@ -6,11 +6,12 @@ import { useTheme } from '../context/ThemeContext';
 export interface GlassTextInputProps extends TextInputProps {
     isPassword?: boolean;
     containerStyle?: any;
+    icon?: string;
 }
 
 export function GlassTextInput(props: GlassTextInputProps) {
     const { colors } = useTheme();
-    const { isPassword, secureTextEntry, style, containerStyle, ...restProps } = props;
+    const { isPassword, secureTextEntry, style, containerStyle, icon, ...restProps } = props;
     const [isSecure, setIsSecure] = useState(true);
 
     const toggleSecureEntry = () => {
@@ -19,19 +20,29 @@ export function GlassTextInput(props: GlassTextInputProps) {
 
     return (
         <View style={[styles.container, containerStyle]}>
+            {icon && (
+                <View style={styles.leadingIcon}>
+                    <Feather name={icon as any} size={20} color={colors.mutedText} />
+                </View>
+            )}
             <TextInput
-                style={[styles.input, { 
-                    color: colors.text, 
-                    backgroundColor: colors.cardBackground, 
-                    borderColor: colors.border, // Use border color instead of primary for a more subtle look
-                }, style]}
+                style={[
+                    styles.input, 
+                    { 
+                        color: colors.text, 
+                        backgroundColor: colors.cardBackground, 
+                        borderColor: colors.border,
+                        paddingLeft: icon ? 45 : 15,
+                    }, 
+                    style
+                ]}
                 placeholderTextColor={colors.mutedText}
                 secureTextEntry={isPassword ? isSecure : secureTextEntry}
                 {...restProps}
             />
             {isPassword && (
                 <TouchableOpacity 
-                    style={styles.iconContainer} 
+                    style={styles.trailingIconContainer} 
                     onPress={toggleSecureEntry}
                     activeOpacity={0.7}
                 >
@@ -64,7 +75,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         width: '100%',
     },
-    iconContainer: {
+    leadingIcon: {
+        position: 'absolute',
+        left: 15,
+        zIndex: 1,
+        height: '100%',
+        justifyContent: 'center',
+    },
+    trailingIconContainer: {
         position: 'absolute',
         right: 15,
         height: '100%',

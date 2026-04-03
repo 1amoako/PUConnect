@@ -29,6 +29,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
+import { GlassContainer } from "../components/GlassContainer";
 import { useTheme } from "../context/ThemeContext";
 import ContentCard, { CardData, SAMPLE_DATA } from "@/components/ContentCard";
 
@@ -84,6 +85,8 @@ export default function FeedScreen() {
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
   const [editorMode, setEditorMode] = useState<'identity' | 'expert' | 'both'>('both');
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [isAdminManagementActive, setIsAdminManagementActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
   const [chatActivityContext, setChatActivityContext] = useState<CardData | null>(null);
@@ -136,6 +139,8 @@ export default function FeedScreen() {
     setIsSearchActive(false);
     setIsProfileEditorActive(false);
     setIsNotificationsActive(false);
+    setIsAdminMenuOpen(false);
+    setIsAdminManagementActive(false);
     setSelectedProfile(null);
     setIsAdEditorActive(false);
   }, [activeTab]);
@@ -324,9 +329,9 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile) && (
+        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || (activeTab === 'admin' && !isDesktop)) && (
           <View style={styles.utilitySection}>
-            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile) && (
+            {(isDesktop && (isSearchActive || isNotificationsActive || selectedProfile)) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
                 onPress={() => {
@@ -338,6 +343,24 @@ export default function FeedScreen() {
                 <Ionicons name="close-outline" size={32} color={colors.text} />
               </TouchableOpacity>
             )}
+            {activeTab === 'admin' && !isDesktop && (
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+              >
+                <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        {activeTab === 'admin' && isDesktop && (
+          <View style={styles.utilitySection}>
+            <TouchableOpacity 
+              style={[styles.iconButton, { marginRight: 10 }]}
+              onPress={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+            >
+              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -503,10 +526,39 @@ export default function FeedScreen() {
               )}
 
               {activeTab === "admin" && isAdmin && (
-                <AdminReviewView 
-                  isDesktop={isDesktop} 
-                  onBack={() => setActiveTab("home")}
-                />
+                <>
+                  <AdminReviewView 
+                    isDesktop={isDesktop} 
+                    onBack={() => setActiveTab("home")}
+                    isManagementOpen={isAdminManagementActive}
+                    onCloseManagement={() => setIsAdminManagementActive(false)}
+                  />
+                  {isAdminMenuOpen && (
+                    <GlassContainer style={[styles.adminDropDown, { backgroundColor: colors.cardBackground, borderColor: colors.border, top: isDesktop ? 70 : 52 }]}>
+                      <TouchableOpacity 
+                        style={styles.dropDownItem}
+                        onPress={() => {
+                          setIsAdminManagementActive(true);
+                          setIsAdminMenuOpen(false);
+                        }}
+                      >
+                        <Ionicons name="people-outline" size={18} color={colors.text} />
+                        <Text style={[styles.dropDownText, { color: colors.text }]}>Manage Users</Text>
+                      </TouchableOpacity>
+                      <View style={[styles.dropDownDivider, { backgroundColor: colors.border }]} />
+                      <TouchableOpacity 
+                        style={styles.dropDownItem}
+                        onPress={() => {
+                          setIsAdminManagementActive(true);
+                          setIsAdminMenuOpen(false);
+                        }}
+                      >
+                        <Ionicons name="shield-outline" size={18} color={colors.text} />
+                        <Text style={[styles.dropDownText, { color: colors.text }]}>Elevate to Admin</Text>
+                      </TouchableOpacity>
+                    </GlassContainer>
+                  )}
+                </>
               )}
 
               {activeTab === "profile" && (
@@ -971,5 +1023,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     boxShadow: "0 8 15 rgba(0, 0, 0, 0.25)",
     transform: [{ translateY: -15 }],
+  },
+  adminDropDown: {
+    position: 'absolute',
+    right: 15,
+    width: 200,
+    borderRadius: 20,
+    padding: 10,
+    zIndex: 2000,
+    boxShadow: "0 10 30 rgba(0, 0, 0, 0.15)",
+  },
+  dropDownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 12,
+  },
+  dropDownText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  dropDownDivider: {
+    height: 1,
+    marginVertical: 4,
   },
 });
