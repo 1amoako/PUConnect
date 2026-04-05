@@ -10,7 +10,7 @@ import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import Animated, { 
     useAnimatedStyle, 
@@ -43,28 +43,81 @@ export default function FeedScreen() {
   const isAdmin = role === "admin";
   const { colors, isDark } = useTheme();
   const isDesktop = width >= 768;
-  const [activeTab, setActiveTab] = useState("home");
-  const [feedTab, setFeedTab] = useState<"skill" | "request">("skill");
+  const params = useLocalSearchParams();
+  const router = useRouter();
+
+  const navigateState = (newParams: Record<string, string | null>) => {
+    const nextParams: Record<string, string> = { ...params } as Record<string, string>;
+    Object.keys(newParams).forEach(k => {
+      if (newParams[k] === null || newParams[k] === "false") {
+        delete nextParams[k];
+      } else {
+        nextParams[k] = newParams[k] as string;
+      }
+    });
+    router.push({ pathname: '/feed', params: nextParams });
+  };
+
+  const activeTab = (params.tab as string) || "home";
+  
+  // Combined router state clearer for tab changing
+  const setActiveTab = (tab: string) => navigateState({ 
+      tab, 
+      settings: null, 
+      profileEditor: null, 
+      notifications: null, 
+      adminMenu: null, 
+      adminManagement: null, 
+      profile: null,
+      search: null,
+      adEditor: null
+  });
+
+  const feedTab = (params.feedTab as "skill" | "request") || "skill";
+  const setFeedTab = (view: "skill" | "request") => navigateState({ feedTab: view });
   
   // Phase 1: Central User State (Now pulled from context)
   const { currentUser, setCurrentUser } = useUser();
 
-  const [isMobileChatActive, setIsMobileChatActive] = useState(false);
-  const [isSettingsActive, setIsSettingsActive] = useState(false);
-  const [isSearchActive, setIsSearchActive] = useState(false);
-  const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
+  const isMobileChatActive = params.mobileChat === "true";
+  const setIsMobileChatActive = (active: boolean) => navigateState({ mobileChat: active ? "true" : null });
+
+  const isSettingsActive = params.settings === "true";
+  const setIsSettingsActive = (active: boolean) => navigateState({ settings: active ? "true" : null });
+
+  const isSearchActive = params.search === "true";
+  const setIsSearchActive = (active: boolean) => navigateState({ search: active ? "true" : null });
+
+  const isProfileEditorActive = params.profileEditor === "true";
+  const setIsProfileEditorActive = (active: boolean) => navigateState({ profileEditor: active ? "true" : null });
+
   const [editorMode, setEditorMode] = useState<'identity' | 'expert' | 'both'>('both');
-  const [isNotificationsActive, setIsNotificationsActive] = useState(false);
-  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
-  const [isAdminManagementActive, setIsAdminManagementActive] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
-  const [directChatId, setDirectChatId] = useState<string | null>(null);
+  
+  const isNotificationsActive = params.notifications === "true";
+  const setIsNotificationsActive = (active: boolean) => navigateState({ notifications: active ? "true" : null });
+
+  const isAdminMenuOpen = params.adminMenu === "true";
+  const setIsAdminMenuOpen = (active: boolean) => navigateState({ adminMenu: active ? "true" : null });
+
+  const isAdminManagementActive = params.adminManagement === "true";
+  const setIsAdminManagementActive = (active: boolean) => navigateState({ adminManagement: active ? "true" : null });
+
+  const directChatId = params.chatId as string | null;
+  const setDirectChatId = (id: string | null) => navigateState({ chatId: id });
+
+  const [selectedProfileData, setSelectedProfileData] = useState<PublicProfileData | null>(null);
+  const selectedProfile = selectedProfileData; // alias for child components
+  const setSelectedProfile = (profile: PublicProfileData | null) => {
+    navigateState({ profile: profile ? profile.id : null });
+  };
+
   const [chatActivityContext, setChatActivityContext] = useState<CardData | null>(null);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
   const [reportTargetName, setReportTargetName] = useState("");
 
   // Ad Editor State
-  const [isAdEditorActive, setIsAdEditorActive] = useState(false);
+  const isAdEditorActive = params.adEditor === "true";
+  const setIsAdEditorActive = (active: boolean) => navigateState({ adEditor: active ? "true" : null });
   const [adEditorType, setAdEditorType] = useState<'skill' | 'request'>('skill');
   const [adToEdit, setAdToEdit] = useState<any>(null);
   const activeTabX = useSharedValue(0);
@@ -99,26 +152,34 @@ export default function FeedScreen() {
     };
   });
 
-  useEffect(() => {
-    if (activeTab !== "profile") {
-      setIsSettingsActive(false);
-    }
-    if (activeTab !== "chat") {
-      setDirectChatId(null);
-    }
-    setIsSearchActive(false);
-    setIsProfileEditorActive(false);
-    setIsNotificationsActive(false);
-    setIsAdminMenuOpen(false);
-    setIsAdminManagementActive(false);
-    setAdminManagementMode('users');
-    setSelectedProfile(null);
-    setIsAdEditorActive(false);
-  }, [activeTab]);
+  // URL params inherently clean themselves up through navigateState when changing tabs,
+  // so we don't need a massive effect block to zero them out!
 
   const [adminManagementMode, setAdminManagementMode] = useState<'users' | 'elevate'>('users');
 
   const [isProfileScrollingToReviews, setIsProfileScrollingToReviews] = useState(false);
+
+  useEffect(() => {
+    const profileId = params.profile as string;
+    if (profileId) {
+      const mockProfile: PublicProfileData = {
+        id: profileId,
+        name: profileId === "1" ? "Sarah Jenkins" : "David Chen",
+        handle: profileId === "1" ? "sjenkins" : "dchen",
+        description: profileId === "1" 
+          ? "I help early-stage startups build their first digital services with high-end minimal design. Over 5 years of experience in mobile and web design."
+          : "React Native specialist available for building scalable mobile applications. Passionate about clean code and performance.",
+        skills: profileId === "1" ? ["UI Design", "UX Research", "Figma", "Branding"] : ["React Native", "TypeScript", "Firebase", "Node.js"],
+        contact: "+1 (555) 123-4567",
+        image: profileId === "1" 
+          ? "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80"
+          : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+      };
+      setSelectedProfileData(mockProfile);
+    } else {
+      setSelectedProfileData(null);
+    }
+  }, [params.profile]);
 
   const handleProfileClick = (item: string | CardData, scrollToReviews: boolean = false) => {
     const profileId = typeof item === 'string' ? item : item.id;
@@ -128,50 +189,28 @@ export default function FeedScreen() {
     } else {
       setChatActivityContext(null);
     }
-
-    // In a real app, you'd fetch the profile data here. 
-    // For now, we'll mock it based on the person clicked.
-    const mockProfile: PublicProfileData = {
-      id: profileId,
-      name: profileId === "1" ? "Sarah Jenkins" : "David Chen",
-      handle: profileId === "1" ? "sjenkins" : "dchen",
-      description: profileId === "1" 
-        ? "I help early-stage startups build their first digital services with high-end minimal design. Over 5 years of experience in mobile and web design."
-        : "React Native specialist available for building scalable mobile applications. Passionate about clean code and performance.",
-      skills: profileId === "1" ? ["UI Design", "UX Research", "Figma", "Branding"] : ["React Native", "TypeScript", "Firebase", "Node.js"],
-      contact: "+1 (555) 123-4567",
-      image: profileId === "1" 
-        ? "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80"
-        : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-    };
-    setSelectedProfile(mockProfile);
+    navigateState({ profile: profileId });
   };
 
   const handleChatFromProfile = (profileId: string) => {
-    setSelectedProfile(null);
-    setDirectChatId(profileId);
-    setActiveTab("chat");
+    navigateState({ tab: 'chat', profile: null, chatId: profileId });
   };
 
   const handleNotificationPress = (item: NotificationItem) => {
-    setIsNotificationsActive(false);
-
     if (item.actionPath === '/chat') {
-      if (item.relatedEntityId) {
-        setDirectChatId(item.relatedEntityId);
-      }
-      setActiveTab('chat');
+      navigateState({ notifications: null, tab: 'chat', chatId: item.relatedEntityId || null });
     } else if (item.actionPath === '/profile') {
       if (item.relatedEntityId) {
-        handleProfileClick(item.relatedEntityId);
+        navigateState({ notifications: null, tab: 'home', profile: item.relatedEntityId });
       } else {
-        setSelectedProfile(null);
-        setActiveTab('profile'); 
+        navigateState({ notifications: null, tab: 'profile', profile: null });
       }
     } else if (item.actionPath === '/discover') {
-      setActiveTab('discover');
+      navigateState({ notifications: null, tab: 'discover' });
     } else if (item.actionTab) {
-      setActiveTab(item.actionTab);
+      navigateState({ notifications: null, tab: item.actionTab });
+    } else {
+      navigateState({ notifications: null });
     }
   };
 
