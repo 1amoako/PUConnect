@@ -165,14 +165,15 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
 
   // Set initial active chat if provided
   React.useEffect(() => {
-    if (initialActiveChat) {
+    if (initialActiveChat && initialActiveChat !== activeChat) {
       handleChatSelect(initialActiveChat);
     }
-    if (initialContext) {
+    if (initialContext && initialContext.id !== activeContext?.id) {
       setActiveContext(initialContext);
       setInputText(`Hi, I'm interested in your ${initialContext.type === 'skill' ? 'service' : 'request'}: "${initialContext.title}"\n`);
     }
-  }, [initialActiveChat, initialContext, handleChatSelect]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialActiveChat, initialContext]);
 
   // Reset messages when switching chats to prevent state spillage
   React.useEffect(() => {

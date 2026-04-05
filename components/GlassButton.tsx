@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, ActivityIndicator, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 
 interface GlassButtonProps extends TouchableOpacityProps {
@@ -11,15 +12,27 @@ interface GlassButtonProps extends TouchableOpacityProps {
     textStyle?: any;
 }
 
-export function GlassButton({ title, variant = 'primary', icon, style, disabled, isLoading, textStyle, ...rest }: GlassButtonProps) {
+export function GlassButton({ title, variant = 'primary', icon, style, disabled, isLoading, textStyle, onPress, ...rest }: GlassButtonProps) {
     const { colors } = useTheme();
     const isPrimary = variant === 'primary';
     const isDisabled = disabled || isLoading;
+
+    const handlePress = (e: any) => {
+        if (!isDisabled) {
+            if (Platform.OS !== 'web') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
+            if (onPress) {
+                onPress(e);
+            }
+        }
+    };
 
     return (
         <TouchableOpacity
             activeOpacity={0.7}
             disabled={isDisabled}
+            onPress={handlePress}
             style={[
                 styles.container,
                 { 
