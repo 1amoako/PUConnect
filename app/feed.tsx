@@ -25,6 +25,7 @@ import {
     TouchableOpacity,
     useWindowDimensions,
     View,
+    BackHandler,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AppLogo from "../components/AppLogo";
@@ -51,11 +52,17 @@ export default function FeedScreen() {
     Object.keys(newParams).forEach(k => {
       if (newParams[k] === null || newParams[k] === "false") {
         delete nextParams[k];
+        nextParams[k] = ""; // Ensures native clears the param
       } else {
         nextParams[k] = newParams[k] as string;
       }
     });
-    router.push({ pathname: '/feed', params: nextParams });
+
+    if (Platform.OS === 'web') {
+      router.push({ pathname: '/feed', params: nextParams });
+    } else {
+      router.setParams(nextParams);
+    }
   };
 
   const activeTab = (params.tab as string) || "home";
@@ -152,9 +159,54 @@ export default function FeedScreen() {
     };
   });
 
-  // URL params inherently clean themselves up through navigateState when changing tabs,
-  // so we don't need a massive effect block to zero them out!
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
 
+    const onBackPress = () => {
+      // 1. Intercept major overlays
+      if (params.adEditor === "true") {
+        navigateState({ adEditor: null });
+        return true;
+      }
+      if (params.profileEditor === "true") {
+        navigateState({ profileEditor: null });
+        return true;
+      }
+      if (params.settings === "true") {
+        navigateState({ settings: null });
+        return true;
+      }
+      if (params.search === "true") {
+        navigateState({ search: null });
+        return true;
+      }
+      if (params.adminMenu === "true") {
+        navigateState({ adminMenu: null });
+        return true;
+      }
+      if (params.notifications === "true") {
+        navigateState({ notifications: null });
+        return true;
+      }
+      if (params.profile) {
+        navigateState({ profile: null });
+        return true;
+      }
+
+      // 2. Intercept Tabs (if not on 'home' tab, go back to 'home')
+      const currentTab = params.tab || "home";
+      if (currentTab !== "home") {
+        setActiveTab("home"); // clears all other params automatically
+        return true; // We handled it
+      }
+
+      // 3. Let default behavior happen (exit app) 
+      return false; 
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [params]);
   const [adminManagementMode, setAdminManagementMode] = useState<'users' | 'elevate'>('users');
 
   const [isProfileScrollingToReviews, setIsProfileScrollingToReviews] = useState(false);
