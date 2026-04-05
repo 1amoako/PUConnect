@@ -5,6 +5,7 @@ import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, Pl
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import { GlassContainer } from "./GlassContainer";
+import { FeedbackModal } from "./FeedbackModal";
 
 interface SettingsViewProps {
   isDesktop: boolean;
@@ -16,6 +17,7 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
   const { colors, isDark, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Granular Notification States
   const [notifyMessages, setNotifyMessages] = useState(true);
@@ -98,6 +100,8 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
           {renderSettingRow("trash-outline", "Clear Cache", null, () => {})}
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           {renderSettingRow("information-circle-outline", "About", <Text style={[styles.valueText, { color: colors.mutedText }]}>v1.0.4</Text>, () => {})}
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+          {renderSettingRow("bulb-outline", "Share Feedback", null, () => setShowFeedbackModal(true))}
         </View>
       </View>
 
@@ -205,6 +209,17 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      <FeedbackModal
+        visible={showFeedbackModal}
+        isDesktop={isDesktop}
+        onClose={() => setShowFeedbackModal(false)}
+        onSubmit={(cat, sug, imp) => {
+          console.log("Feedback submitted:", { cat, sug, imp });
+          // In a real app, this would be an API call.
+          // We can also trigger a global notification here.
+        }}
+      />
     </ScrollView>
   );
 }
