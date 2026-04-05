@@ -4,6 +4,7 @@ import { Animated, Easing, Modal, ScrollView, StyleSheet, Text, TouchableOpacity
 import { useTheme } from "../context/ThemeContext";
 import { GlassContainer } from "./GlassContainer";
 import { GlassTextInput } from "./GlassTextInput";
+import { useUser } from "../context/UserContext";
 
 type AdminTab = "verifications" | "reports" | "feedback";
 type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | "promote_admin" | "delete_profile" | null;
@@ -64,7 +65,7 @@ const MOCK_FEEDBACK = [
   },
 ];
 
-const MOCK_USERS = [
+const INITIAL_MOCK_USERS = [
   { id: "u1", name: "Jacob Zero", email: "jacob@example.com", role: "Expert", joined: "2023-12-01", status: "Active" },
   { id: "u2", name: "Sarah Jenkins", email: "sarah.j@example.com", role: "Expert", joined: "2024-01-15", status: "Active" },
   { id: "u3", name: "David Chen", email: "david.c@example.com", role: "User", joined: "2024-02-10", status: "Active" },
@@ -90,8 +91,10 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, m
   const [adminPassword, setAdminPassword] = useState("");
   const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "success" | "failure">("idle");
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const { currentUser, setCurrentUser } = useUser();
+  const [mockUsers, setMockUsers] = useState(INITIAL_MOCK_USERS);
   const [userSearchQuery, setUserSearchQuery] = useState("");
-  const [userRoleFilter, setUserRoleFilter] = useState<"All" | "Expert" | "User">("All");
+  const [userRoleFilter, setUserRoleFilter] = useState<"All" | "Expert" | "User" | "Admin">("All");
 
   const dot1Anim = useRef(new Animated.Value(0)).current;
   const dot2Anim = useRef(new Animated.Value(0)).current;
@@ -272,6 +275,15 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, m
       setActionStatus(isSuccess ? "success" : "failure");
       
       if (isSuccess) {
+        if (action === "promote_admin" && selectedItem) {
+          setMockUsers(prev => prev.map(u => 
+            u.id === selectedItem.id ? { ...u, role: "Admin" } : u
+          ));
+          if (currentUser.name === selectedItem.name) {
+            setCurrentUser(prev => ({ ...prev, role: "admin" }));
+          }
+        }
+        
         // Automatically close after 2 seconds on success
         setTimeout(() => {
           handleCloseModal();
@@ -628,7 +640,7 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, m
 
     const currentMode = managementMode || 'users';
 
-    const filteredUsers = MOCK_USERS.filter(user => {
+    const filteredUsers = mockUsers.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
                            user.email.toLowerCase().includes(userSearchQuery.toLowerCase());
       const matchesRole = userRoleFilter === "All" || user.role === userRoleFilter;

@@ -14,6 +14,7 @@ export interface AdOrRequest {
 export interface UserProfile {
   name: string;
   handle: string;
+  role?: "admin" | "user";
   joined: string;
   avatar?: string;
   expertStatus: ExpertStatus;

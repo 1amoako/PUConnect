@@ -41,8 +41,6 @@ export default function FeedScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { role } = useLocalSearchParams();
-  const isAdmin = role === "admin";
-  const { colors, isDark } = useTheme();
   const isDesktop = width >= 768;
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -75,6 +73,7 @@ export default function FeedScreen() {
       notifications: null, 
       adminMenu: null, 
       adminManagement: null, 
+      adminManagementMode: null,
       profile: null,
       search: null,
       adEditor: null
@@ -85,6 +84,8 @@ export default function FeedScreen() {
   
   // Phase 1: Central User State (Now pulled from context)
   const { currentUser, setCurrentUser } = useUser();
+  const isAdmin = role === "admin" || currentUser.role === "admin";
+  const { colors, isDark } = useTheme();
 
   const isMobileChatActive = params.mobileChat === "true";
   const setIsMobileChatActive = (active: boolean) => navigateState({ mobileChat: active ? "true" : null });
@@ -207,8 +208,8 @@ export default function FeedScreen() {
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => subscription.remove();
   }, [params]);
-  const [adminManagementMode, setAdminManagementMode] = useState<'users' | 'elevate'>('users');
-
+  const adminManagementMode = (params.adminManagementMode as "users" | "elevate") || "users";
+  const setAdminManagementMode = (mode: "users" | "elevate") => navigateState({ adminManagementMode: mode });
   const [isProfileScrollingToReviews, setIsProfileScrollingToReviews] = useState(false);
 
   useEffect(() => {
@@ -610,9 +611,7 @@ export default function FeedScreen() {
                       <TouchableOpacity 
                         style={styles.dropDownItem}
                         onPress={() => {
-                          setAdminManagementMode('users');
-                          setIsAdminManagementActive(true);
-                          setIsAdminMenuOpen(false);
+                          navigateState({ adminManagementMode: 'users', adminManagement: "true", adminMenu: null });
                         }}
                       >
                         <Ionicons name="people-outline" size={18} color={colors.text} />
@@ -622,9 +621,7 @@ export default function FeedScreen() {
                       <TouchableOpacity 
                         style={styles.dropDownItem}
                         onPress={() => {
-                          setAdminManagementMode('elevate');
-                          setIsAdminManagementActive(true);
-                          setIsAdminMenuOpen(false);
+                          navigateState({ adminManagementMode: 'elevate', adminManagement: "true", adminMenu: null });
                         }}
                       >
                         <Ionicons name="shield-outline" size={18} color={colors.text} />
